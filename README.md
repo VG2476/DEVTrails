@@ -175,7 +175,7 @@ Anti-Spoofing \& Fraud Detection layer runs automatically:
     ↓
 Razorpay UPI payout fires (for Path A and Path B)
     ↓
-WhatsApp Confirmation: "₹280 sent to ravi@upi. Ref: RZP12345.
+WhatsApp Confirmation: "₹280 sent to ravi@upi. Ref: RZP12345
   Your income is protected."
 ```
 
