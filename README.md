@@ -129,6 +129,8 @@ Step 1: Platform selection (Zomato/Swiggy)
     ↓
 Step 2: Shift selection (Morning / Day / Night / Flexible)
     ↓
+Step 3: Verify gig worker using Digilocker (AADHAR, PAN, DL)
+    ↓
 Step 3: UPI ID for payouts
     ↓
 Step 4: Pin codes (zone assignment)
@@ -652,6 +654,7 @@ Language is selected at onboarding Step 0 and can be changed anytime via the `LA
 
 |API|Type|DCI Component|Cost|
 |-|-|-|-|
+|Digilocker API|Verification|Log in|Free|
 |Tomorrow.io|Weather — hyperlocal|Rainfall + Heat (primary)|Free (500 calls/day)|
 |Open-Meteo|Weather — forecast|7-day prediction + fallback|Free (unlimited)|
 |IMD RSS|Weather — official alerts|Red/Orange alert override|Free|
@@ -763,7 +766,7 @@ GigKavach uses **8 tables** in Supabase PostgreSQL. Data is stored for exactly a
 
 ## 20\. Demo Video
 
-📹 **Phase 1 Demo Video:** `\[Link to be added by March 20]`
+📹 **Phase 1 Demo Video:** <br>  https://drive.google.com/file/d/14i5vJTVcu6uJG37t0oL7duJEv63TAdXr/view?usp=sharing
 
 The video covers:
 
@@ -814,10 +817,10 @@ The video covers:
                ₹0 in API costs during development
 
 ┌─────────────────────────────────────────────────────────────────┐
-│  When a storm hits Koramangala at 2PM on a Tuesday,            │
-│  Ravi gets a WhatsApp alert. By end of day, ₹280 lands         │
-│  in his UPI account. He didn't file a claim.                   │
-│  He didn't call anyone. He just stayed safe.                   │
+│  When a storm hits Koramangala at 2PM on a Tuesday,             │
+│  Ravi gets a WhatsApp alert. By end of day, ₹280 lands          │
+│  in his UPI account. He didn't file a claim.                    │
+│  He didn't call anyone. He just stayed safe.                    │  
 │                                                                 │
 │  That is GigKavach.                                             │
 └─────────────────────────────────────────────────────────────────┘
