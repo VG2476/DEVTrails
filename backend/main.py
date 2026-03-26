@@ -25,10 +25,12 @@ from contextlib import asynccontextmanager
 import logging
 
 from config.settings import settings
-from api.routes.health import router as health_router
-from api.routes.workers import router as workers_router
-from api.routes.policies import router as policies_router
+from api.health import router as health_router
+from api.workers import router as workers_router
+from api.policies import router as policies_router
 from api.dci import router as dci_router
+from api.worker_list import router as worker_list_router
+from api.worker_detail import router as worker_detail_router
 
 
 # ─── Logging Setup ────────────────────────────────────────────────────────────
@@ -157,6 +159,8 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(workers_router)   # POST /api/v1/register — Sumukh
 app.include_router(policies_router)  # GET + PATCH /api/v1/policy/{id} — Sumukh
+app.include_router(worker_list_router)   # GET /api/workers — teammate compatibility
+app.include_router(worker_detail_router) # GET /api/worker/{worker_id} — teammate compatibility
 
 # TODO: Uncomment as each route module is built:
 app.include_router(dci_router, prefix="/api/v1")        # Varshit — DCI engine endpoints
