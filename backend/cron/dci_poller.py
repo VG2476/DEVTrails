@@ -16,6 +16,7 @@ from services.aqi_service import get_aqi_score
 from services.heat_service import get_heat_score
 from services.social_service import get_social_score
 from services.platform_service import get_platform_score
+from services.eligibility_service import check_eligibility
 from utils.redis_client import set_dci_cache
 from utils.supabase_client import get_supabase
 from config.settings import settings
@@ -43,6 +44,33 @@ def _insert_log_to_db(payload: dict):
             sb.table("dci_logs").insert(payload).execute()
         except Exception as e:
             logger.error(f"Failed to insert DCI log into Supabase: {e}")
+
+def trigger_claims_pipeline(pincode: str, final_dci: int, dci_data: dict):
+    """
+    Evaluates all workers in the affected zone against the eligibility firewall,
+    mock-inserts valid claims to the payouts table, and fires the WhatsApp webhook.
+    """
+    # 1. Hardcoded mock list of active workers on shift in this zone right now
+    # We use worker IDs mapping directly back to WORKER_POLICIES_DB in eligibility_service
+    active_workers_in_zone = ["W100", "W101", "W102"]
+    
+    logger.info(f"[CLAIMS PIPELINE] Evaluating {len(active_workers_in_zone)} workers in zone {pincode} (DCI: {final_dci})")
+    
+    # 2. Iterate and evaluate Eligibility Logic
+    for worker_id in active_workers_in_zone:
+        eligible, reason = check_eligibility(worker_id, dci_event={
+            "disruption_start": dci_data.get("updated_at"),
+            "shift_affected": "Morning",  # hardcoded dynamic shift proxy
+            "dci_score": final_dci
+        })
+        
+        if eligible:
+            logger.info(f"✅ PAYOUT APPROVED for Worker {worker_id} | DCI: {final_dci}")
+            # TODO: Hit POST /api/v1/calculate_payout to get the monetary amount
+            # TODO: Insert to payouts table with status=triggered
+            # TODO: Trigger WhatsApp Alert via Twilio
+        else:
+            logger.warning(f"❌ PAYOUT REJECTED for Worker {worker_id} | Reason: {reason}")
 
 async def process_zone(pincode: str) -> dict:
     """Fetches components and calculates DCI for a single zone."""
@@ -106,6 +134,10 @@ async def process_zone(pincode: str) -> dict:
     # Run the synchronous Supabase insert in a background thread to prevent blocking
     await asyncio.to_thread(_insert_log_to_db, db_payload)
     
+    # 5. Automatically trigger Claims Pipeline if DCI crosses trigger threshold
+    if final_dci >= settings.DCI_TRIGGER_THRESHOLD:
+        trigger_claims_pipeline(pincode, final_dci, dci_data)
+        
     return dci_data
 
 async def run_dci_cycle():

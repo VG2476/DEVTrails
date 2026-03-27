@@ -29,6 +29,7 @@ from api.routes.health import router as health_router
 from api.routes.workers import router as workers_router
 from api.routes.policies import router as policies_router
 from api.dci import router as dci_router
+from api.payouts import router as payouts_router
 
 
 # ─── Logging Setup ────────────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ app.include_router(policies_router)  # GET + PATCH /api/v1/policy/{id} — Sumuk
 # TODO: Uncomment as each route module is built:
 app.include_router(dci_router, prefix="/api/v1")        # Varshit — DCI engine endpoints
 # app.include_router(whatsapp_router, prefix="/api/v1")   # Sumukh — Twilio webhook
-# app.include_router(payouts_router, prefix="/api/v1")    # Sumukh — payout triggers
+app.include_router(payouts_router, prefix="/api/v1")    # Sumukh — payout triggers
 # app.include_router(fraud_router, prefix="/api/v1")      # Vijeth — fraud assessment
 # app.include_router(dashboard_router, prefix="/api/v1")  # V Saatwik — admin metrics
 
