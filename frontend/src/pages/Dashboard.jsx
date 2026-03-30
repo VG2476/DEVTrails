@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Users, Zap, IndianRupee, ShieldAlert, TrendingUp, TrendingDown, Clock, CheckCircle2, Clock3, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';import { Users, Zap, IndianRupee, ShieldAlert, TrendingUp, TrendingDown, Clock, CheckCircle2, Clock3, AlertCircle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts';
 
 // DCI Live Monitor Data - last 12 time points (5-minute intervals)
@@ -25,63 +24,7 @@ const payoutsData = [145000, 168000, 152000, 198000, 220000, 198000, 245680];
 const fraudAlertsData = [4, 6, 5, 8, 10, 11, 12];
 
 // Active Zones with Alerts
-const activeZones = [
-  {
-    id: 1,
-    name: 'Koramangala 5th Block',
-    dci: 82,
-    trigger: 'Heavy Rainfall · 23mm/hr',
-    workersAffected: 48,
-    status: 'critical'
-  },
-  {
-    id: 2,
-    name: 'Whitefield Tech Park',
-    dci: 75,
-    trigger: 'Rainfall + High Humidity',
-    workersAffected: 35,
-    status: 'high'
-  },
-  {
-    id: 3,
-    name: 'Marathahalli',
-    dci: 68,
-    trigger: 'Moderate Rainfall',
-    workersAffected: 28,
-    status: 'moderate'
-  },
-];
 
-// Recent Payouts
-const recentPayouts = [
-  {
-    id: 1,
-    initials: 'RK',
-    name: 'Rajesh Kumar',
-    tier: 'Shield Pro',
-    amount: 420,
-    status: 'sent',
-    timestamp: '2 min ago'
-  },
-  {
-    id: 2,
-    initials: 'SR',
-    name: 'Sneha Reddy',
-    tier: 'Shield Plus',
-    amount: 315,
-    status: 'processing',
-    timestamp: '5 min ago'
-  },
-  {
-    id: 3,
-    initials: 'AP',
-    name: 'Amit Patel',
-    tier: 'Shield Basic',
-    amount: 210,
-    status: 'sent',
-    timestamp: '12 min ago'
-  },
-];
 
 // Recent Activity Feed
 const activityFeed = [
@@ -116,6 +59,80 @@ const activityFeed = [
 ];
 
 export const Dashboard = () => {
+  // Recent Payouts
+const [recentPayouts, setRecentPayouts] = useState([]);
+useEffect(() => {
+  const fetchPayouts = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/api/payouts?limit=3");
+      const data = await res.json();
+
+      const formatted = data.payouts.map((p) => ({
+        id: p.id,
+
+        initials: p.worker_name
+          ?.split(" ")
+          .map((n) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+
+        name: p.worker_name,
+
+        // keep your UI format
+        tier: "Shield Pro",
+
+        amount: p.amount,
+
+        status: p.status === "payout_sent" ? "sent" : "processing",
+
+        timestamp: timeAgo(p.timestamp),
+      }));
+
+      setRecentPayouts(formatted);
+    } catch (err) {
+      console.error("Error fetching payouts:", err);
+    }
+  };
+
+  fetchPayouts();
+}, []);
+const [activeZones, setActiveZones] = useState([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchZones = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        "http://localhost:3000/api/v1/dci-alerts/latest?limit=4"
+      );
+
+      const data = await res.json();
+
+      setActiveZones(data.alerts || []);
+    } catch (err) {
+      console.error("Failed to fetch active zones:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchZones();
+}, []);
+
+const timeAgo = (timestamp) => {
+  const now = new Date();
+  const past = new Date(timestamp);
+  const diff = Math.floor((now - past) / 1000);
+
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
+  return `${Math.floor(diff / 86400)} day ago`;
+};
+
   const statCards = [
     {
       label: 'Active Workers This Week',
@@ -213,6 +230,7 @@ export const Dashboard = () => {
   };
 
   return (
+    
     <div className="space-y-6">
       {/* Page Header */}
       <div>
@@ -323,108 +341,167 @@ export const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </div>
+{/* RIGHT SIDEBAR - 40% */}
+<div className="flex flex-col gap-6">
+  {/* ACTIVE ZONE ALERTS */}
+  <div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      Active Zone Alerts
+    </h3>
 
-        {/* RIGHT SIDEBAR - 40% */}
-        <div className="flex flex-col gap-6">
-          {/* ACTIVE ZONE ALERTS */}
-          <div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Active Zone Alerts</h3>
-            <div className="space-y-3">
-              {activeZones.map((zone) => (
-                <div key={zone.id} className={`${getDCIZoneColor(zone.dci)} bg-gray-50 dark:bg-gray-800 p-3 rounded-lg`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm">{zone.name}</p>
-                    <span className={`text-sm font-bold px-2 py-1 rounded ${getDCIColor(zone.dci)}`}>
-                      {zone.dci}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{zone.trigger}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">{zone.workersAffected} workers affected</p>
-                  {/* Mini Progress Bar */}
-                  <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${
-                        zone.dci >= 85
-                          ? 'bg-red-600'
-                          : zone.dci >= 65
-                            ? 'bg-orange-500'
-                            : 'bg-amber-500'
-                      }`}
-                      style={{ width: `${Math.min((zone.dci / 100) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="space-y-3">
+      {activeZones.map((zone) => {
+        const severity = zone.status; // 👈 from API
 
-          {/* PAYOUT PIPELINE */}
-          <div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payout Pipeline</h3>
-            <div className="space-y-3">
-              {recentPayouts.map((payout) => (
-                <div key={payout.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-gigkavach-orange flex items-center justify-center text-white font-bold text-xs">
-                    {payout.initials}
-                  </div>
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{payout.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{payout.tier}</p>
-                  </div>
-                  {/* Amount + Status */}
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-green-600 dark:text-green-400">₹{payout.amount}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-end gap-1">
-                      {payout.status === 'sent' ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3 text-green-600" /> Sent
-                        </>
-                      ) : (
-                        <>
-                          <Clock3 className="w-3 h-3 text-amber-600" /> Processing
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">Timestamp varies</p>
-          </div>
-        </div>
-      </div>
+        return (
+          <div
+            key={zone.id}
+            className={`p-3 rounded-lg ${
+              severity === "catastrophic"
+                ? "bg-red-50 border border-red-200 dark:bg-red-950/20"
+                : severity === "severe"
+                ? "bg-orange-50 border border-orange-200 dark:bg-orange-950/20"
+                : "bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/20"
+            }`}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                {zone.neighborhood}
+              </p>
 
-      {/* RECENT ACTIVITY FEED - Bottom */}
-      <div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-        <div className="space-y-3">
-          {activityFeed.map((activity) => {
-            const Icon = activity.icon;
-            return (
-              <div
-                key={activity.id}
-                className={`border-l-4 p-3 rounded-lg ${getActivityColor(activity.type)} flex items-start gap-3`}
+              <span
+                className={`text-sm font-bold px-2 py-1 rounded text-white ${
+                  severity === "catastrophic"
+                    ? "bg-red-600"
+                    : severity === "severe"
+                    ? "bg-orange-500"
+                    : "bg-yellow-500"
+                }`}
               >
-                {/* Timeline Icon */}
-                <div className="pt-1">
-                  <Icon className="w-4 h-4" style={{ color: getActivityIconColor(activity.type) }} />
-                </div>
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 dark:text-white font-medium">{activity.description}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {activity.timestamp}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+                {zone.dci}
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+              {zone.trigger}
+            </p>
+
+
+            {/* Mini Progress Bar */}
+            <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${
+                  severity === "catastrophic"
+                    ? "bg-red-600"
+                    : severity === "severe"
+                    ? "bg-orange-500"
+                    : "bg-yellow-400"
+                }`}
+                style={{ width: `${Math.min((zone.dci / 100) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+ {/* PAYOUT PIPELINE */}
+<div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    Payout Pipeline
+  </h3>
+
+  <div className="space-y-3">
+    {recentPayouts.map((payout) => (
+      <div
+        key={payout.id}
+        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+      >
+        {/* Avatar */}
+        <div className="w-8 h-8 rounded-full bg-gigkavach-orange flex items-center justify-center text-white font-bold text-xs">
+          {payout.initials}
+        </div>
+
+        {/* Details */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {payout.name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {payout.tier}
+          </p>
+        </div>
+
+        {/* Amount + Status */}
+        <div className="text-right">
+          <p className="text-sm font-bold text-green-600 dark:text-green-400">
+            ₹{payout.amount}
+          </p>
+
+          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-end gap-1">
+            {payout.status === "sent" ? (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-green-600" />
+                Sent
+              </>
+            ) : (
+              <>
+                <Clock3 className="w-3 h-3 text-amber-600" />
+                Processing
+              </>
+            )}
+          </p>
         </div>
       </div>
-    </div>
-  );
-};
+    ))}
+  </div>
 
+  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+    Timestamp varies
+  </p>
+</div>
+
+{/* ✅ FIX: removed extra closing divs here */}
+
+{/* RECENT ACTIVITY FEED - Bottom */}
+<div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    Recent Activity
+  </h2>
+
+  <div className="space-y-3">
+    {activityFeed.map((activity) => {
+      const Icon = activity.icon;
+      return (
+        <div
+          key={activity.id}
+          className={`border-l-4 p-3 rounded-lg ${getActivityColor(activity.type)} flex items-start gap-3`}
+        >
+          {/* Timeline Icon */}
+          <div className="pt-1">
+            <Icon
+              className="w-4 h-4"
+              style={{ color: getActivityIconColor(activity.type) }}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-900 dark:text-white font-medium">
+              {activity.description}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {activity.timestamp}
+            </p>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+        </div>
+      </div>
+  );
+}
