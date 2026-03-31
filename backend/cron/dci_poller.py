@@ -16,6 +16,7 @@ from services.aqi_service import get_aqi_score
 from services.heat_service import get_heat_score
 from services.social_service import get_social_score
 from services.platform_service import get_platform_score
+from services.eligibility_service import check_eligibility
 from utils.redis_client import set_dci_cache
 from utils.supabase_client import get_supabase
 from config.settings import settings
@@ -43,6 +44,35 @@ def _insert_log_to_db(payload: dict):
             sb.table("dci_logs").insert(payload).execute()
         except Exception as e:
             logger.error(f"Failed to insert DCI log into Supabase: {e}")
+
+def trigger_claims_pipeline(pincode: str, final_dci: int, dci_data: dict):
+    """
+    Evaluates all workers in the affected zone against the eligibility firewall,
+    mock-inserts valid claims to the payouts table, and fires the WhatsApp webhook.
+    """
+    # 1. Mock list of active workers on shift in this zone right now
+    active_workers_in_zone = ["W100", "W101", "W102"]
+    from api.whatsapp import send_whatsapp_alert
+    
+    logger.info(f"[CLAIMS PIPELINE] Evaluating {len(active_workers_in_zone)} workers in zone {pincode} (DCI: {final_dci})")
+    
+    # 2. Iterate and evaluate Eligibility Logic
+    for worker_id in active_workers_in_zone:
+        eligible, reason = check_eligibility(worker_id, dci_event={
+            "disruption_start": dci_data.get("updated_at"),
+            "shift_affected": dci_data.get("shift_active", "All"),
+            "dci_score": final_dci,
+            "ndma_override_active": dci_data.get("ndma_override_active", False)
+        })
+        
+        if eligible:
+            logger.info(f"✅ PAYOUT APPROVED for Worker {worker_id} | DCI: {final_dci}")
+            # FIRE WHATSAPP ALERT (Requirement §11 / Image #1, #2)
+            send_whatsapp_alert(worker_id, "disruption_alert", {"dci": final_dci})
+            
+            # TODO: Hit POST /api/v1/calculate_payout synchronously or record for EOD settlement
+        else:
+            logger.warning(f"❌ PAYOUT REJECTED for Worker {worker_id} | Reason: {reason}")
 
 async def process_zone(pincode: str) -> dict:
     """Fetches components and calculates DCI for a single zone."""
@@ -72,12 +102,31 @@ async def process_zone(pincode: str) -> dict:
     # Rainfall*0.3 + AQI*0.2 + Heat*0.2 + Social*0.2 + Platform*0.1
     final_dci_float = (w_score * 0.3) + (a_score * 0.2) + (h_score * 0.2) + (s_score * 0.2) + (p_score * 0.1)
     final_dci = int(round(final_dci_float))
+    
+    # --- NDMA NATURAL DISASTER OVERRIDE (IMAGE REQ) ---
+    ndma_override = social_result.get("ndma_active", False)
+    if ndma_override:
+        logger.critical(f"🚦 NDMA NATURAL DISASTER OVERRIDE active for {pincode}! Forcing catastrophic 95 score.")
+        final_dci = 95
+        
+    # --- CATASTROPHIC OVERRIDE BYPASS ---
+    # According to README: "If DCI misses threshold but any individual signal 
+    # independently crosses its own threshold, bypass DCI calculation."
+    if w_score >= 100 or a_score >= 100 or h_score >= 100 or s_score >= 100 or p_score >= 100:
+        logger.critical(f"🚨 CATASTROPHIC OVERRIDE TRIGGERED in {pincode}! Single parameter independently crossed maximum threshold.")
+        final_dci = max(final_dci, 90) # Force minimum 90 to guarantee Tier 3 payouts
+        
     severity = get_severity_tier(final_dci)
     
+    from utils.datetime_utils import get_current_shift_name
+    active_shift = get_current_shift_name()
+
     dci_data = {
         "pincode": pincode,
         "dci_score": final_dci,
         "severity_tier": severity,
+        "ndma_override_active": ndma_override,
+        "shift_active": active_shift,
         "components": {
             "rainfall": weather_result,
             "aqi": aqi_result,
@@ -100,12 +149,17 @@ async def process_zone(pincode: str) -> dict:
         "heat_score": h_score,
         "social_score": s_score,
         "platform_score": p_score,
-        "severity_tier": severity
+        "severity_tier": severity,
+        "ndma_override_active": ndma_override
     }
     
     # Run the synchronous Supabase insert in a background thread to prevent blocking
     await asyncio.to_thread(_insert_log_to_db, db_payload)
     
+    # 5. Automatically trigger Claims Pipeline if DCI crosses trigger threshold
+    if final_dci >= settings.DCI_TRIGGER_THRESHOLD:
+        trigger_claims_pipeline(pincode, final_dci, dci_data)
+        
     return dci_data
 
 async def run_dci_cycle():

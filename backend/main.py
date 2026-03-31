@@ -25,12 +25,11 @@ from contextlib import asynccontextmanager
 import logging
 
 from config.settings import settings
-from api.health import router as health_router
-from api.workers import router as workers_router
-from api.policies import router as policies_router
+from api.routes.health import router as health_router
+from api.routes.workers import router as workers_router
+from api.routes.policies import router as policies_router
 from api.dci import router as dci_router
-from api.worker_list import router as worker_list_router
-from api.worker_detail import router as worker_detail_router
+from api.payouts import router as payouts_router
 
 
 # ─── Logging Setup ────────────────────────────────────────────────────────────
@@ -77,12 +76,24 @@ async def lifespan(app: FastAPI):
 
         # (Varshit): Uncommented and wired to cron poller
         from cron.dci_poller import run_dci_cycle
+        from cron.settlement_service import run_daily_settlement
+
         scheduler.add_job(
             run_dci_cycle,
             "interval",
             seconds=settings.DCI_POLL_INTERVAL_SECONDS,
             id="dci_engine",
             name="DCI Engine Poll",
+        )
+
+        # ── Daily Settlement Execution 11:55 PM (Image #5 Requirement) ───────────
+        scheduler.add_job(
+            run_daily_settlement,
+            "cron",
+            hour=23,
+            minute=55,
+            id="daily_settlement",
+            name="End of Day Payout Settlement",
         )
 
         # ── Placeholder job just to confirm scheduler works ───────────────
@@ -159,13 +170,11 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(workers_router)   # POST /api/v1/register — Sumukh
 app.include_router(policies_router)  # GET + PATCH /api/v1/policy/{id} — Sumukh
-app.include_router(worker_list_router)   # GET /api/workers — teammate compatibility
-app.include_router(worker_detail_router) # GET /api/worker/{worker_id} — teammate compatibility
 
 # TODO: Uncomment as each route module is built:
 app.include_router(dci_router, prefix="/api/v1")        # Varshit — DCI engine endpoints
 # app.include_router(whatsapp_router, prefix="/api/v1")   # Sumukh — Twilio webhook
-# app.include_router(payouts_router, prefix="/api/v1")    # Sumukh — payout triggers
+app.include_router(payouts_router, prefix="/api/v1")    # Sumukh — payout triggers
 # app.include_router(fraud_router, prefix="/api/v1")      # Vijeth — fraud assessment
 # app.include_router(dashboard_router, prefix="/api/v1")  # V Saatwik — admin metrics
 
