@@ -144,3 +144,30 @@ async def trigger_sla_breach(pincode: str, reason: str):
     """
     logger.critical(f"[SLA BREACH TRIGGERED] {reason} for zone {pincode}. Workers compensated automatically.")
     return {"status": "SLA_BREACH_EXECUTED", "zone": pincode, "reason": reason}
+
+from datetime import datetime, timezone
+
+@router.get("/payouts/total/today")
+async def get_today_total():
+    try:
+        sb = get_supabase()
+
+        # Get all payouts created today
+        result = (
+            sb.table("payouts")
+            .select("final_amount, created_at")
+            .gte("created_at", datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0).isoformat())
+            .execute()
+        )
+
+        total = sum(row.get("final_amount", 0) for row in result.data or [])
+
+        return {
+            "total_payout_today": total
+        }
+
+    except Exception as e:
+        return {
+            "total_payout_today": 0,
+            "error": str(e)
+        }

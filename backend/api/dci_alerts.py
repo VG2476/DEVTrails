@@ -26,14 +26,14 @@ logger = logging.getLogger("gigkavach.api.dci_alerts")
 
 
 @router.get("/dci-alerts/latest")
-async def get_latest_dci_alerts(limit: int = 4):
+async def get_latest_dci_alerts(limit: int = 3):
     try:
         sb = get_supabase()
 
         response = (
             sb.table("dci_events")
             .select("pin_code, dci_score, severity, triggered_at, disruption_types")
-            .gt("dci_score", 65)
+            .gt("dci_score", 64)
             .order("triggered_at", desc=True)
             .limit(limit)
             .execute()
