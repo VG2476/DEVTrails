@@ -7,9 +7,13 @@ import { Fraud } from './pages/Fraud';
 import { Settings } from './pages/Settings';
 import { Heatmap } from './pages/Heatmap';
 import { Analytics } from './pages/Analytics';
+import { useBackendKeepAlive } from './services/keepAlive';
 
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
+
+  // Keep backend awake on Render (prevents free tier spin-down)
+  useBackendKeepAlive();
 
   // Initialize dark mode from localStorage
   useEffect(() => {
