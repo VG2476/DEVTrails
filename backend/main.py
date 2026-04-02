@@ -110,6 +110,17 @@ async def lifespan(app: FastAPI):
             name="Claims Processing Pipeline",
         )
 
+        # ── Self Keep-Alive (Prevent Render Spin-Down) ──────────────────────
+        # Ping the health endpoint every 5 min to keep backend warm on Render free tier
+        from cron.keep_alive import run_keep_alive
+        scheduler.add_job(
+            run_keep_alive,
+            "interval",
+            seconds=settings.DCI_POLL_INTERVAL_SECONDS,  # 5-min cadence, synced with DCI
+            id="keep_alive",
+            name="Backend Keep-Alive (Render Free Tier)",
+        )
+
         scheduler.start()
         app.state.scheduler = scheduler
         logger.info(f"APScheduler started | DCI poll every {settings.DCI_POLL_INTERVAL_SECONDS}s")
