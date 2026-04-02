@@ -162,15 +162,9 @@ allowed_origins = [
     "http://localhost:5173",        # Local dev: Vite frontend (npm run dev)
     "http://localhost:3000",        # Alternative local port
     settings.FRONTEND_LOCAL_URL,    # From settings.py
+    settings.FRONTEND_PRODUCTION_URL,
+    "https://gigkavach-delta.vercel.app",
 ]
-
-# Production & deployment origins
-if settings.APP_ENV == "development":
-    allowed_origins.append("*")     # Allow all in development for testing
-else:
-    # Production: Add configured production frontend URL
-    if settings.FRONTEND_PRODUCTION_URL:
-        allowed_origins.append(settings.FRONTEND_PRODUCTION_URL)
 
 # Remove empty strings and duplicates
 allowed_origins = [url for url in set(allowed_origins) if url and url != ""]
@@ -180,6 +174,7 @@ logger.info(f"[CORS] Allowed origins: {allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -223,7 +218,7 @@ from api import workers_Dashboard
 app.include_router(workers_Dashboard.router, prefix="/api")
 
 from api.worker_list import router as workers_list_router
-app.include_router(workers_list_router, prefix="/api")
+app.include_router(workers_list_router)
 
 from api.worker_detail import router as workers_detail_router
-app.include_router(workers_detail_router, prefix="/api")
+app.include_router(workers_detail_router)

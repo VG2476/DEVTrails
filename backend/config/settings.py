@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     
     # ── Frontend URLs (for CORS) ──────────────────────────────────────
     FRONTEND_LOCAL_URL: str = "http://localhost:5173"
-    FRONTEND_PRODUCTION_URL: str = ""  # Set in .env when deployed (e.g., https://app.vercel.app)
+    FRONTEND_PRODUCTION_URL: str = "https://gigkavach-delta.vercel.app"  # Set in .env when deployed (e.g., https://app.vercel.app)
 
     # ── Supabase ──────────────────────────────────────────────────────
     SUPABASE_URL: str = ""

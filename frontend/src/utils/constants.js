@@ -2,9 +2,21 @@
  * Frontend constants and API URLs
  */
 
+const DEFAULT_API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD
+    ? 'https://devtrails-backend-dnlr.onrender.com'
+    : 'http://localhost:8000');
+
+const DEFAULT_WS_BASE_URL =
+  import.meta.env.VITE_WS_BASE_URL ||
+  (import.meta.env.PROD
+    ? 'wss://devtrails-backend-dnlr.onrender.com'
+    : 'ws://localhost:8000');
+
 // API Base Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  BASE_URL: DEFAULT_API_BASE_URL,
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -12,7 +24,7 @@ export const API_CONFIG = {
 
 // WebSocket Configuration
 export const WS_CONFIG = {
-  BASE_URL: import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:3000',
+  BASE_URL: DEFAULT_WS_BASE_URL,
   RECONNECT_ATTEMPTS: 5,
   RECONNECT_DELAY: 3000,
 };

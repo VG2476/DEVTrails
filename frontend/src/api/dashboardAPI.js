@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_CONFIG } from "../utils/constants";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: API_CONFIG.BASE_URL,
 });
 
 export const dashboardAPI = {

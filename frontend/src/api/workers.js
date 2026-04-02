@@ -3,7 +3,7 @@
  */
 import apiClient from './client.js';
 
-const ENDPOINT = 'api/workers';
+const ENDPOINT = '/api/workers';
 
 export const workerAPI = {
   /**
