@@ -6,7 +6,7 @@ const DEFAULT_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD
     ? 'https://devtrails-backend-dnlr.onrender.com'
-    : 'http://localhost:8000');
+    : '/');
 
 const DEFAULT_WS_BASE_URL =
   import.meta.env.VITE_WS_BASE_URL ||

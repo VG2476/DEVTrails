@@ -9,15 +9,23 @@ export const workerAPI = {
   /**
    * Get all workers with pagination and filters
    */
-  getAll: (params = {}) => {
-    return apiClient.get(ENDPOINT, { params });
+  getAll: async (params = {}) => {
+    try {
+      return await apiClient.get(ENDPOINT, { params });
+    } catch {
+      return await apiClient.get('/api/api/workers', { params });
+    }
   },
 
   /**
    * Get single worker by ID
    */
-  getById: (id) => {
-    return apiClient.get(`${ENDPOINT}/${id}`);
+  getById: async (id) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/${id}`);
+    } catch {
+      return await apiClient.get(`/api/api/workers/${id}`);
+    }
   },
 
   /**
@@ -44,49 +52,77 @@ export const workerAPI = {
   /**
    * Get worker's DCI score
    */
-  getDCI: (id) => {
-    return apiClient.get(`${ENDPOINT}/${id}/dci`);
+  getDCI: async (id) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/${id}/dci`);
+    } catch {
+      return await apiClient.get(`/api/api/workers/${id}/dci`);
+    }
   },
 
   /**
    * Get worker's payouts
    */
-  getPayouts: (id, params = {}) => {
-    return apiClient.get(`${ENDPOINT}/${id}/payouts`, { params });
+  getPayouts: async (id, params = {}) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/${id}/payouts`, { params });
+    } catch {
+      return await apiClient.get(`/api/api/workers/${id}/payouts`, { params });
+    }
   },
 
   /**
    * Get worker's fraud flags
    */
-  getFraudFlags: (id) => {
-    return apiClient.get(`${ENDPOINT}/${id}/fraud-flags`);
+  getFraudFlags: async (id) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/${id}/fraud-flags`);
+    } catch {
+      return await apiClient.get(`/api/api/workers/${id}/fraud-flags`);
+    }
   },
 
   /**
    * Get worker's GigScore (derived from multiple factors)
    */
-  getGigScore: (id) => {
-    return apiClient.get(`${ENDPOINT}/${id}/gig-score`);
+  getGigScore: async (id) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/${id}/gig-score`);
+    } catch {
+      return await apiClient.get(`/api/api/workers/${id}/gig-score`);
+    }
   },
 
   /**
    * Search workers by name or phone
    */
-  search: (query) => {
-    return apiClient.get(`${ENDPOINT}/search`, { params: { q: query } });
+  search: async (query) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/search`, { params: { q: query } });
+    } catch {
+      return await apiClient.get(`/api/api/workers/search`, { params: { q: query } });
+    }
   },
 
   /**
    * Get workers by zone
    */
-  getByZone: (zoneId, params = {}) => {
-    return apiClient.get(`${ENDPOINT}/zone/${zoneId}`, { params });
+  getByZone: async (zoneId, params = {}) => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/zone/${zoneId}`, { params });
+    } catch {
+      return await apiClient.get(`/api/api/workers/zone/${zoneId}`, { params });
+    }
   },
 
   /**
    * Export workers list
    */
-  export: (format = 'csv') => {
-    return apiClient.get(`${ENDPOINT}/export`, { params: { format } });
+  export: async (format = 'csv') => {
+    try {
+      return await apiClient.get(`${ENDPOINT}/export`, { params: { format } });
+    } catch {
+      return await apiClient.get(`/api/api/workers/export`, { params: { format } });
+    }
   },
 };

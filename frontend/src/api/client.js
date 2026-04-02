@@ -38,11 +38,19 @@ client.interceptors.response.use(
       localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       window.location.href = '/login';
     }
+    // Suppress console logging for 404s (handled by fallback in API modules)
+    if (error.response?.status === 404) {
+      return Promise.reject(error);
+    }
+    // Log other errors
+    if (error.response?.status) {
+      console.warn(`API Error ${error.response.status}:`, error.config?.url);
+    }
     return Promise.reject(error.response?.data || error);
   }
 );
 
-// Retry wrapper
+// Retry wrapper - skip retries for 404s (fallback handles them)
 const withRetry = async (fn, retries = API_CONFIG.RETRY_ATTEMPTS) => {
   let lastError;
   for (let i = 0; i < retries; i++) {
@@ -50,6 +58,10 @@ const withRetry = async (fn, retries = API_CONFIG.RETRY_ATTEMPTS) => {
       return await fn();
     } catch (error) {
       lastError = error;
+      // Don't retry 404s - let fallback logic handle them
+      if (error.response?.status === 404) {
+        throw error;
+      }
       if (i < retries - 1) {
         await new Promise((resolve) => setTimeout(resolve, API_CONFIG.RETRY_DELAY * (i + 1)));
       }
