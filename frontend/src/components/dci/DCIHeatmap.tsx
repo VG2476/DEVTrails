@@ -8,8 +8,6 @@
  *   - A pie chart showing ACTUAL DCI component weights for the selected event
  *     (not a fixed mapping — sourced from the `disruption_types` field in the API response)
  */
-/// <reference types="react" />
-/// <reference types="react-dom" />
 import { useState, useEffect, useRef } from 'react';
 
 import {
@@ -101,12 +99,17 @@ const buildPieData = (disruption_types: string[]) => {
     : segments.map((d) => ({ ...d, value: Math.round((d.value / total) * 100) }));
 };
 
-interface DCIHeatmapProps {
-  /** Optional default pincode to highlight on load */
-  pincode?: string;
+
+interface AlertPayload {
+  neighborhood?: string;
+  area_name?: string;
+  pin_code?: string;
+  dci?: number;
+  dci_score?: number;
+  disruption_types?: string[];
 }
 
-export const DCIHeatmap = (_props: DCIHeatmapProps) => {
+export const DCIHeatmap = () => {
 
   const [zones, setZones] = useState<ZoneData[]>(FALLBACK_ZONES);
   const [selectedZone, setSelectedZone] = useState<ZoneData>(FALLBACK_ZONES[0]);
@@ -121,9 +124,9 @@ export const DCIHeatmap = (_props: DCIHeatmapProps) => {
       try {
         setLoading(true);
         const res = await dciAPI.getLatestAlerts(10);
-        const alerts: any[] = res?.alerts ?? [];
+        const alerts: AlertPayload[] = res?.alerts ?? [];
         if (alerts.length > 0) {
-          const mapped: ZoneData[] = alerts.map((a: any, idx: number) => ({
+          const mapped: ZoneData[] = alerts.map((a: AlertPayload, idx: number) => ({
             id: idx + 1,
             name: a.neighborhood || a.area_name || `Zone ${a.pin_code}`,
             shortName: a.neighborhood || a.pin_code,
@@ -150,13 +153,13 @@ export const DCIHeatmap = (_props: DCIHeatmapProps) => {
 
   // Reinitialise Leaflet map whenever zone list changes
   useEffect(() => {
-    let map: any;
+    let map: unknown;
     const init = async () => {
       if (!containerRef.current) return;
       const L = (await import('leaflet')).default;
       const container = L.DomUtil.get('dci-heatmap-map');
-      if (container && (container as any)._leaflet_id) {
-        (container as any)._leaflet_id = null;
+      if (container && (container as Record<string, unknown>)._leaflet_id) {
+        (container as Record<string, unknown>)._leaflet_id = null;
       }
       map = L.map('dci-heatmap-map').setView([12.9716, 77.5946], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -256,7 +259,7 @@ export const DCIHeatmap = (_props: DCIHeatmapProps) => {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: any) => [`${v}%`, 'Weight']} />
+                <Tooltip formatter={(v: number | string) => [`${v}%`, 'Weight']} />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute text-center pointer-events-none">

@@ -60,13 +60,13 @@ export const DCIChart = ({
     const load = async () => {
       try {
         const res = await dciAPI.getByPincode(pincode);
-        const history: any[] = res?.history_24h ?? [];
+        const history: Record<string, unknown>[] = res?.history_24h ?? [];
         if (history.length > 0) {
           const mapped: DCIDataPoint[] = history
             .slice()                       // don't mutate
             .reverse()                    // oldest → newest (API returns desc)
             .slice(-12)                   // last 12 samples → one per 5 min
-            .map((row: any) => ({
+            .map((row: Record<string, unknown>) => ({
               time: new Date(row.timestamp).toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -128,7 +128,7 @@ export const DCIChart = ({
               color: '#fff',
               fontSize: '12px',
             }}
-            formatter={(value: any) => [`${value}`, 'DCI Score']}
+            formatter={(value: number | string) => [`${value}`, 'DCI Score']}
             labelFormatter={(l) => `Time: ${l}`}
           />
           <ReferenceLine
