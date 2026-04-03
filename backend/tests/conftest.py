@@ -8,8 +8,8 @@ def mock_supabase_for_whatsapp(monkeypatch):
     # and "new user onboarding".
     mock_sb.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = type('obj', (object,), {'data': []})()
     mock_sb.table.return_value.select.return_value.eq.return_value.execute.return_value = type('obj', (object,), {'data': []})()
-    mock_sb.table.return_value.insert.return_value.execute.return_value = type('obj', (object,), {'data': [{}]})()
-    mock_sb.table.return_value.update.return_value.eq.return_value.execute.return_value = type('obj', (object,), {'data': [{}]})()
+    mock_sb.table.return_value.insert.return_value.execute.return_value = type('obj', (object,), {'data': [{'id': 'W123'}]})()
+    mock_sb.table.return_value.update.return_value.eq.return_value.execute.return_value = type('obj', (object,), {'data': [{'id': 'W123'}]})()
     
     # Patch in onboarding_handlers
     try:

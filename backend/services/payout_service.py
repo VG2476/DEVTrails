@@ -134,18 +134,26 @@ def calculate_payout(
         
         logger.debug(f"Features extracted for {worker_id}: {len(features)} features")
         
-        # Step 2: Get multiplier from model
-        if include_confidence:
-            # Get prediction with confidence metrics
-            model_result = predict_with_confidence(features)
-            multiplier = model_result['multiplier']
-            confidence = model_result['confidence']
-            model_r2 = model_result['model_r2']
-        else:
-            # Simple prediction without confidence
-            multiplier = predict_multiplier(features)
-            confidence = None
-            model_r2 = None
+        # Step 2: Get multiplier from model (with graceful fallback if model missing)
+        try:
+            if include_confidence:
+                # Get prediction with confidence metrics
+                model_result = predict_with_confidence(features)
+                multiplier = model_result['multiplier']
+                confidence = model_result['confidence']
+                model_r2 = model_result['model_r2']
+            else:
+                # Simple prediction without confidence
+                multiplier = predict_multiplier(features)
+                confidence = None
+                model_r2 = None
+        except FileNotFoundError:
+            logger.warning(f"⚠️ XGBoost model missing. Using fallback multiplier for {worker_id}")
+            multiplier = 1.5  # Safe baseline claim multiplier
+            confidence = 0.1
+            model_r2 = 0.0
+            if include_confidence:
+                model_result = {'recommendation': '⚠️ Mock fallback multiplier due to missing model'}
         
         logger.debug(f"Model predicted multiplier: {multiplier:.3f}x for {worker_id}")
         

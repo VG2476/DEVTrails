@@ -104,8 +104,8 @@ def test_payout_calculation():
         worker_id='W123',
         city='Chennai',
         zone_density='High',
-        shift='morning',
-        disruption_type='Heavy_Rainfall',
+        shift='Morning',
+        disruption_type='Rain',
         hour_of_day=10,
         day_of_week=0
     )
