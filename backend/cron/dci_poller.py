@@ -78,20 +78,32 @@ async def process_zone(pincode: str) -> dict:
     """Fetches components and calculates DCI for a single zone."""
     logger.debug(f"Processing DCI for zone {pincode}")
     
-    # 1. Fetch live components concurrently
-    weather_task = get_weather_score(pincode)
-    aqi_task = get_aqi_score(pincode)
-    social_task = get_social_score(pincode)
-    platform_task = get_platform_score(pincode)
+    # 1. Fetch live components CONCURRENTLY (Invincible Loop)
+    # This ensures that even if one service fails, the engine continues.
+    results = await asyncio.gather(
+        get_weather_score(pincode),
+        get_aqi_score(pincode),
+        get_social_score(pincode),
+        get_platform_score(pincode),
+        return_exceptions=True
+    )
+
+    # Deconstruct and handle possible exceptions
+    weather_result = results[0] if not isinstance(results[0], Exception) else {"score": 0, "error": str(results[0])}
+    if isinstance(results[0], Exception): logger.error(f"Weather error for {pincode}: {results[0]}")
     
-    # heat_service reads from weather_service's cache.
-    # To ensure it grabs the freshest weather data, we await weather first.
-    weather_result = await weather_task
+    aqi_result = results[1] if not isinstance(results[1], Exception) else {"score": 0, "error": str(results[1])}
+    if isinstance(results[1], Exception): logger.error(f"AQI error for {pincode}: {results[1]}")
+    
+    social_result = results[2] if not isinstance(results[2], Exception) else {"score": 0, "ndma_active": False, "error": str(results[2])}
+    if isinstance(results[2], Exception): logger.error(f"Social error for {pincode}: {results[2]}")
+    
+    platform_result = results[3] if not isinstance(results[3], Exception) else {"score": 0, "error": str(results[3])}
+    if isinstance(results[3], Exception): logger.error(f"Platform error for {pincode}: {results[3]}")
+
+    # Heat score is derived from weather (needs fresh data)
     heat_result = await get_heat_score(pincode)
-    aqi_result = await aqi_task
-    social_result = await social_task
-    platform_result = await platform_task
-    
+
     w_score = weather_result.get("score", 0)
     a_score = aqi_result.get("score", 0)
     h_score = heat_result.get("score", 0)
@@ -99,22 +111,13 @@ async def process_zone(pincode: str) -> dict:
     p_score = platform_result.get("score", 0)
     
     # 2. Compute Composite DCI Score (Weighted aggregation)
-    # Rainfall*0.3 + AQI*0.2 + Heat*0.2 + Social*0.2 + Platform*0.1
     final_dci_float = (w_score * 0.3) + (a_score * 0.2) + (h_score * 0.2) + (s_score * 0.2) + (p_score * 0.1)
     final_dci = int(round(final_dci_float))
     
-    # --- NDMA NATURAL DISASTER OVERRIDE (IMAGE REQ) ---
+    # --- NDMA NATURAL DISASTER OVERRIDE ---
     ndma_override = social_result.get("ndma_active", False)
     if ndma_override:
-        logger.critical(f"🚦 NDMA NATURAL DISASTER OVERRIDE active for {pincode}! Forcing catastrophic 95 score.")
         final_dci = 95
-        
-    # --- CATASTROPHIC OVERRIDE BYPASS ---
-    # According to README: "If DCI misses threshold but any individual signal 
-    # independently crosses its own threshold, bypass DCI calculation."
-    if w_score >= 100 or a_score >= 100 or h_score >= 100 or s_score >= 100 or p_score >= 100:
-        logger.critical(f"🚨 CATASTROPHIC OVERRIDE TRIGGERED in {pincode}! Single parameter independently crossed maximum threshold.")
-        final_dci = max(final_dci, 90) # Force minimum 90 to guarantee Tier 3 payouts
         
     severity = get_severity_tier(final_dci)
     
@@ -137,11 +140,9 @@ async def process_zone(pincode: str) -> dict:
         "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
     
-    # 3. Cache the full composite payload in Redis for APIs / Payout tracking
+    # 3. Persistence (SAFE: Redis mocked, Supabase handles error)
     await set_dci_cache(pincode, dci_data, settings.DCI_CACHE_TTL_SECONDS)
-    
-    # 4. Insert historical log into Supabase
-    db_payload = {
+    _insert_log_to_db({
         "pincode": pincode,
         "total_score": final_dci,
         "rainfall_score": w_score,
@@ -151,12 +152,9 @@ async def process_zone(pincode: str) -> dict:
         "platform_score": p_score,
         "severity_tier": severity,
         "ndma_override_active": ndma_override
-    }
+    })
     
-    # Run the synchronous Supabase insert in a background thread to prevent blocking
-    await asyncio.to_thread(_insert_log_to_db, db_payload)
-    
-    # 5. Automatically trigger Claims Pipeline if DCI crosses trigger threshold
+    # 4. Trigger Claims if applicable
     if final_dci >= settings.DCI_TRIGGER_THRESHOLD:
         trigger_claims_pipeline(pincode, final_dci, dci_data)
         

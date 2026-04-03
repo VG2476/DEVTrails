@@ -196,8 +196,7 @@ app.add_middleware(
 
 
 # ─── Route Registration ───────────────────────────────────────────────────────
-# Each feature area has its own router in api/routes/.
-# Add new routers here as teammates build them.
+# Standardized to /api/v1 for all frontend-facing endpoints
 
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/api/v1")           # Authentication routes
@@ -217,23 +216,14 @@ async def root():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/docs")
 
+# Advanced/Dashboard Routers (Standardized to /api/v1)
 from api.dci_alerts import router as dci_alerts_router
-
 app.include_router(dci_alerts_router, prefix="/api/v1")
-from api.payouts import router as payouts_router_dashboard
-
-app.include_router(payouts_router_dashboard)
-
 from api import dci_Dashboard
-
-app.include_router(dci_Dashboard.router)
-
+app.include_router(dci_Dashboard.router, prefix="/api/v1")
 from api import workers_Dashboard
-
-app.include_router(workers_Dashboard.router, prefix="/api")
-
+app.include_router(workers_Dashboard.router, prefix="/api/v1")
 from api.worker_list import router as workers_list_router
-app.include_router(workers_list_router)
-
+app.include_router(workers_list_router, prefix="/api/v1")
 from api.worker_detail import router as workers_detail_router
-app.include_router(workers_detail_router)
+app.include_router(workers_detail_router, prefix="/api/v1")

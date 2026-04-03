@@ -1,92 +1,53 @@
 /**
- * Fraud detection API endpoints
+ * Fraud Detection API Client
+ *
+ * Maps ONLY to real backend routes mounted in main.py:
+ *   POST /api/v1/check-fraud    → Assess a single claim (FraudCheckRequest)
+ *   POST /api/v1/fraud/appeal   → Submit an appeal for a blocked payout
+ *   GET  /api/v1/fraud/health   → System readiness check for fraud models
+ *
+ * Removed aspirational stubs (no backend routes exist):
+ *   ✗ getAll()          — no GET /fraud list endpoint
+ *   ✗ getById()         — no GET /fraud/:id endpoint
+ *   ✗ getStats()        — no /fraud/stats endpoint
+ *   ✗ getWorkerSignals()— no /fraud/worker/:id endpoint
+ *   ✗ detectSyndicate() — no /fraud/syndicate endpoint
+ *   ✗ reviewCase()      — no PATCH /fraud/:id/review endpoint
+ *   ✗ blacklistWorker() — no /fraud/blacklist endpoint
+ *   ✗ removeFromBlacklist() — no DELETE /fraud/blacklist/:id endpoint
+ *   ✗ getZoneDensity()  — no /fraud/zones/density endpoint
+ *   ✗ getTrends()       — no /fraud/trends endpoint
+ *   ✗ exportReport()    — no /fraud/export endpoint
  */
 import apiClient from './client.js';
 
-const ENDPOINT = '/fraud';
-
 export const fraudAPI = {
   /**
-   * Get all fraud alerts
+   * Assess a claim through the 3-stage fraud detection pipeline.
+   * Returns: { is_fraud, fraud_score, decision, payout_action, explanation, audit_log }
+   * POST /api/v1/check-fraud
    */
-  getAll: (params = {}) => {
-    return apiClient.get(ENDPOINT, { params });
+  checkClaim: (claimData, workerHistory = null, userContext = null) => {
+    return apiClient.post('/api/v1/check-fraud', {
+      claim: claimData,
+      worker_history: workerHistory,
+      user_context: userContext,
+    });
   },
 
   /**
-   * Get single fraud alert
-   */
-  getById: (id) => {
-    return apiClient.get(`${ENDPOINT}/${id}`);
-  },
-
-  /**
-   * Get fraud statistics
-   */
-  getStats: () => {
-    return apiClient.get(`${ENDPOINT}/stats`);
-  },
-
-  /**
-   * Get fraud signals for worker
-   */
-  getWorkerSignals: (workerId) => {
-    return apiClient.get(`${ENDPOINT}/worker/${workerId}`);
-  },
-
-  /**
-   * Detect fraud ring (syndicate detection)
-   */
-  detectSyndicate: (params = {}) => {
-    return apiClient.get(`${ENDPOINT}/syndicate`, { params });
-  },
-
-  /**
-   * Review fraud case
-   */
-  reviewCase: (id, data) => {
-    return apiClient.patch(`${ENDPOINT}/${id}/review`, data);
-  },
-
-  /**
-   * Appeal fraud case
+   * Appeal a flagged or blocked payout on behalf of a worker.
+   * POST /api/v1/fraud/appeal
    */
   appealCase: (id, data) => {
-    return apiClient.post(`${ENDPOINT}/${id}/appeal`, data);
+    return apiClient.post(`/api/v1/fraud/${id}/appeal`, data);
   },
 
   /**
-   * Blacklist worker
+   * Check if the fraud detection models (IF + XGBoost) are loaded and ready.
+   * GET /api/v1/fraud/health
    */
-  blacklistWorker: (workerId, data) => {
-    return apiClient.post(`${ENDPOINT}/blacklist/${workerId}`, data);
-  },
-
-  /**
-   * Remove from blacklist
-   */
-  removeFromBlacklist: (workerId) => {
-    return apiClient.delete(`${ENDPOINT}/blacklist/${workerId}`);
-  },
-
-  /**
-   * Get zone fraud density
-   */
-  getZoneDensity: () => {
-    return apiClient.get(`${ENDPOINT}/zones/density`);
-  },
-
-  /**
-   * Get fraud trends (historical data)
-   */
-  getTrends: (params = {}) => {
-    return apiClient.get(`${ENDPOINT}/trends`, { params });
-  },
-
-  /**
-   * Export fraud report
-   */
-  exportReport: (format = 'csv') => {
-    return apiClient.get(`${ENDPOINT}/export`, { params: { format } });
+  getHealth: () => {
+    return apiClient.get('/api/v1/fraud/health');
   },
 };

@@ -1,22 +1,11 @@
 import { useState, useEffect } from 'react';import { Users, Zap, IndianRupee, ShieldAlert, TrendingUp, TrendingDown, Clock, CheckCircle2, Clock3, AlertCircle, IndianRupeeIcon } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts';
-import { dashboardAPI } from "../api/dashboardAPI";
+import { ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { payoutAPI } from '../api/payouts';
+import { dciAPI } from '../api/dci';
+import { workerAPI } from '../api/workers';
+import { DCIChart } from '../components/dci/DCIChart';
 
-// DCI Live Monitor Data - last 12 time points (5-minute intervals)
-const dciLiveData = [
-  { time: '2:00', dci: 48, zone: 'HSR Layout', rainfall: 'LOW' },
-  { time: '2:05', dci: 52, zone: 'Indiranagar', rainfall: 'LOW' },
-  { time: '2:10', dci: 58, zone: 'Koramangala', rainfall: 'MODERATE' },
-  { time: '2:15', dci: 65, zone: 'Koramangala', rainfall: 'HIGH' },
-  { time: '2:20', dci: 72, zone: 'Koramangala', rainfall: 'HIGH' },
-  { time: '2:25', dci: 68, zone: 'Marathahalli', rainfall: 'MODERATE' },
-  { time: '2:30', dci: 75, zone: 'Whitefield', rainfall: 'MODERATE' },
-  { time: '2:35', dci: 82, zone: 'Koramangala', rainfall: 'HIGH' },
-  { time: '2:40', dci: 78, zone: 'Koramangala', rainfall: 'HIGH' },
-  { time: '2:45', dci: 71, zone: 'Electronic City', rainfall: 'LOW' },
-  { time: '2:50', dci: 64, zone: 'HSR Layout', rainfall: 'LOW' },
-  { time: '2:55', dci: 58, zone: 'Indiranagar', rainfall: 'LOW' },
-];
+
 
 
 // Recent Activity Feed
@@ -55,53 +44,56 @@ export const Dashboard = () => {
   // Recent Payouts
 const defaultSpark = [40, 60, 30, 90, 70, 110, 80];
 const [recentPayouts, setRecentPayouts] = useState([]);
-useEffect(() => {
-  const fetchPayouts = async () => {
-    try {
-      const res = await dashboardAPI.getRecentPayouts();
+  useEffect(() => {
+    const fetchPayouts = async () => {
+      try {
+        const res = await payoutAPI.getAll({ limit: 3 });
 
-      const formatted = res.data.payouts.map((p) => ({
-        id: p.id,
-        initials: p.worker_name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase(),
-        name: p.worker_name,
-        tier: "Shield Pro",
-        amount: p.amount,
-        status: p.status === "payout_sent" ? "sent" : "processing",
-        timestamp: timeAgo(p.timestamp),
-      }));
+        // backend shape is { payouts: [...] }
+        const formatted = (res.payouts || []).map((p) => ({
+          id: p.id,
+          initials: p.worker_name
+            ?.split(" ")
+            .map((n) => n[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+          name: p.worker_name,
+          tier: "Shield Pro",
+          amount: p.amount,
+          status: p.status === "payout_sent" ? "sent" : "processing",
+          timestamp: timeAgo(p.timestamp),
+        }));
 
-      setRecentPayouts(formatted);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        setRecentPayouts(formatted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  fetchPayouts();
-}, []);
+    fetchPayouts();
+  }, []);
+
 const [activeZones, setActiveZones] = useState([]);
 const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchZones = async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    const fetchZones = async () => {
+      try {
+        setLoading(true);
 
-      const res = await dashboardAPI.getActiveZones();
-      setActiveZones(res.data.alerts || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const res = await dciAPI.getLatestAlerts(3);
+        setActiveZones(res.alerts || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchZones();
-}, []);
+    fetchZones();
+  }, []);
+
 
 
 const timeAgo = (timestamp) => {
@@ -131,32 +123,34 @@ const [todayPayout, setTodayPayout] = useState(0);
 const [loadingPayout, setLoadingPayout] = useState(true);
 const [todayDCI, setTodayDCI] = useState(0);
 const [activeWorkers, setActiveWorkers] = useState(0);
-useEffect(() => {
-  const fetchDCI = async () => {
-    try {
-      const res = await dashboardAPI.getTodayDCI();
-      setTodayDCI(res.data.total_dci_today ?? 0);
-    } catch (err) {
-      console.error(err);
-      setTodayDCI(0);
-    }
-  };
+  useEffect(() => {
+    const fetchDCI = async () => {
+      try {
+        const res = await dciAPI.getTodayTotal();
+        setTodayDCI(res.total_dci_today ?? 0);
+      } catch (err) {
+        console.error(err);
+        setTodayDCI(0);
+      }
+    };
 
-  fetchDCI();
-}, []);
-useEffect(() => {
-  const fetchWorkers = async () => {
-    try {
-      const res = await dashboardAPI.getActiveWorkersWeek();
-      setActiveWorkers(res.data.active_workers_week ?? 0);
-    } catch (err) {
-      console.error(err);
-      setActiveWorkers(0);
-    }
-  };
+    fetchDCI();
+  }, []);
 
-  fetchWorkers();
-}, []);
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        const res = await workerAPI.getActiveWeekCount();
+        setActiveWorkers(res.active_workers_week ?? 0);
+      } catch (err) {
+        console.error(err);
+        setActiveWorkers(0);
+      }
+    };
+
+    fetchWorkers();
+  }, []);
+
 
 const statCards = [
   {
@@ -190,19 +184,20 @@ const statCards = [
   },
 ];
 
-useEffect(() => {
-  const fetchPayout = async () => {
-    try {
-      const res = await dashboardAPI.getTodayPayout();
-      setTodayPayout(res.data.total_payout_today ?? 0);
-    } catch (err) {
-      console.error(err);
-      setTodayPayout(0);
-    }
-  };
+  useEffect(() => {
+    const fetchPayoutTotal = async () => {
+      try {
+        const res = await payoutAPI.getTodayTotal();
+        setTodayPayout(res.total_payout_today ?? 0);
+      } catch (err) {
+        console.error(err);
+        setTodayPayout(0);
+      }
+    };
 
-  fetchPayout();
-}, []);
+    fetchPayoutTotal();
+  }, []);
+
   const getCardBgColor = (color) => {
     const colors = {
       blue: 'bg-blue-50 dark:bg-blue-950',
@@ -333,59 +328,10 @@ const value = liveMetrics[card.key] ?? metrics[card.key] ?? 0;
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     {/* DCI LIVE MONITOR — left 2 cols */}
-<div className="lg:col-span-2 bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex flex-col justify-center">
-  
-  {/* Live Badge */}
-  <div className="flex items-center gap-3 mb-6">
-    <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950 px-3 py-2 rounded-full border border-red-200 dark:border-red-800">
-      <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-      <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase">Live</span>
-    </div>
-    <span className="text-sm font-semibold text-gray-900 dark:text-white">
-      3 Zones Above Trigger Threshold
-    </span>
-  </div>
-
-  {/* Area Chart — grows to fill available space */}
-  <div className="flex-1 min-h-64">
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={dciLiveData}>
-        <defs>
-          <linearGradient id="colorDci" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#FF6B35" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#FF6B35" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="time" stroke="#9CA3AF" tick={{ fontSize: 12 }} />
-        <YAxis
-          domain={[0, 100]}
-          stroke="#9CA3AF"
-          label={{ value: 'DCI Score', angle: -90, position: 'insideLeft' }}
-        />
-        <Tooltip
-          contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-          formatter={(value, name) => name === 'dci' ? [`${value}`, 'DCI Score'] : [value, name]}
-          labelFormatter={(label) => `Time: ${label}`}
-        />
-        <ReferenceLine
-          y={65}
-          stroke="#FF6B35"
-          strokeDasharray="5 5"
-          label={{ value: 'Trigger Threshold (65)', position: 'insideRight', offset: -10, fill: '#FF6B35', fontSize: 11 }}
-        />
-        <ReferenceLine
-          y={85}
-          stroke="#EF4444"
-          strokeDasharray="5 5"
-          label={{ value: 'Catastrophic (85)', position: 'insideRight', offset: -25, fill: '#EF4444', fontSize: 11 }}
-        />
-        <Area type="monotone" dataKey="dci" stroke="#FF6B35" fillOpacity={1} fill="url(#colorDci)" />
-      </AreaChart>
-    </ResponsiveContainer>
-  </div>
-
+<div className="lg:col-span-2 bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+  <DCIChart pincode="560095" showLiveBadge={true} height={260} />
 </div>
+
       {/* RIGHT SIDEBAR — 1 col, both cards stacked */}
       <div className="flex flex-col gap-6">
 

@@ -24,8 +24,11 @@ import sys
 import json
 import numpy as np
 import pickle
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
+
+logger = logging.getLogger("gigkavach.fraud")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -49,26 +52,31 @@ class FraudDetector:
         self.feature_engineer = FraudFeaturesEngineer()
     
     def _load_models(self):
-        """Load Stage 2 (IF) and Stage 3 (XGB) models."""
+        """Load Stage 2 (IF) and Stage 3 (XGB) models. Fail gracefully if missing."""
         if_path = self.model_dir / 'stage2_isolation_forest.pkl'
         xgb_path = self.model_dir / 'stage3_xgboost.pkl'
         scaler_path = self.model_dir / 'feature_scaler.pkl'
         
-        if not if_path.exists():
-            raise FileNotFoundError(f"Model not found: {if_path}")
-        if not xgb_path.exists():
-            raise FileNotFoundError(f"Model not found: {xgb_path}")
-        if not scaler_path.exists():
-            raise FileNotFoundError(f"Model not found: {scaler_path}")
+        self.model_available = False
         
-        with open(if_path, 'rb') as f:
-            self.isolation_forest = pickle.load(f)
-        
-        with open(xgb_path, 'rb') as f:
-            self.xgboost_model = pickle.load(f)
-        
-        with open(scaler_path, 'rb') as f:
-            self.scaler = pickle.load(f)
+        try:
+            if not if_path.exists() or not xgb_path.exists() or not scaler_path.exists():
+                logger.warning(f"⚠️  ML MODELS MISSING at {self.model_dir}. Falling back to Rule-Based Heuristics.")
+                return
+
+            with open(if_path, 'rb') as f:
+                self.isolation_forest = pickle.load(f)
+            
+            with open(xgb_path, 'rb') as f:
+                self.xgboost_model = pickle.load(f)
+            
+            with open(scaler_path, 'rb') as f:
+                self.scaler = pickle.load(f)
+            
+            self.model_available = True
+            logger.info("✅ FRAUD ML MODELS LOADED SUCCESSFULLY")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to load fraud models: {e}. Using rule-based fallback.")
     
     def detect_fraud(self, claim, worker_history=None):
         """
@@ -102,30 +110,34 @@ class FraudDetector:
                 'confidence': 1.0,
             }
         
-        # Stage 2 & 3: Model-based scoring
-        features = self.feature_engineer.extract_features(claim, worker_history)
-        
-        # Extract in correct feature order
-        X = np.array([features[col] for col in self.FEATURE_COLS], dtype=float).reshape(1, -1)
-        X_scaled = self.scaler.transform(X)[0]
-        
-        # Stage 2: Isolation Forest anomaly score
-        if_score_raw = self.isolation_forest.score_samples(X_scaled.reshape(1, -1))[0]
-        if_score = 1 / (1 + np.exp(if_score_raw))  # Normalize to [0, 1]
-        
-        # Stage 3: XGBoost with IF score
-        X_with_if = np.concatenate([X_scaled, [if_score]]).reshape(1, -1)
-        xgb_score = self.xgboost_model.predict_proba(X_with_if)[0, 1]
-        
-        # Rule-aware ensemble (Improvement #5)
-        # If rules triggered soft flag, be more confident (0.9)
-        # Otherwise, let ML models decide (0.2*IF + 0.8*XGB for better weighting)
-        if stage1_result['decision'] == 'PASS':
-            # No rules triggered - trust ML models more
-            fraud_score = 0.2 * if_score + 0.8 * xgb_score
+        # Stage 2 & 3: Model-based scoring (Only if available)
+        if hasattr(self, 'model_available') and self.model_available:
+            try:
+                features = self.feature_engineer.extract_features(claim, worker_history)
+                
+                # Extract in correct feature order
+                X = np.array([features[col] for col in self.FEATURE_COLS], dtype=float).reshape(1, -1)
+                X_scaled = self.scaler.transform(X)[0]
+                
+                # Stage 2: Isolation Forest anomaly score
+                if_score_raw = self.isolation_forest.score_samples(X_scaled.reshape(1, -1))[0]
+                if_score = 1 / (1 + np.exp(if_score_raw))  # Normalize to [0, 1]
+                
+                # Stage 3: XGBoost with IF score
+                X_with_if = np.concatenate([X_scaled, [if_score]]).reshape(1, -1)
+                xgb_score = self.xgboost_model.predict_proba(X_with_if)[0, 1]
+                
+                # Rule-aware ensemble (Improvement #5)
+                if stage1_result['decision'] == 'PASS':
+                    fraud_score = 0.2 * if_score + 0.8 * xgb_score
+                else:
+                    fraud_score = 0.9
+            except Exception as e:
+                logger.error(f"Error during ML inference: {e}")
+                fraud_score = 0.1 # Default safe score
         else:
-            # Rules found soft signal - high confidence in alert
-            fraud_score = 0.9
+            # Model files missing - fallback to Stage 1 Logic only
+            fraud_score = 0.1 if stage1_result['decision'] == 'PASS' else 0.9
         
         # Decision
         if fraud_score < self.THRESHOLD_APPROVE:

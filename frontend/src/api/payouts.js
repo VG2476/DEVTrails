@@ -1,78 +1,46 @@
 /**
- * Payout API endpoints
+ * Payout API Client
+ *
+ * Maps ONLY to real backend routes in api/payouts.py (prefix: /api):
+ *   GET  /api/payouts             → List payouts with optional filters
+ *   GET  /api/payouts/:id         → Single payout record
+ *   GET  /api/payouts/total/today → Aggregate of total disbursed today
+ *   POST /api/calculate_payout    → ML-driven payout projection
  */
 import apiClient from './client.js';
 
-const ENDPOINT = '/payouts';
+const ENDPOINT = '/api/v1/payouts';
 
 export const payoutAPI = {
   /**
-   * Get all payouts with filters
+   * List all payout records with optional filters (status, zone, date range).
+   * GET /api/v1/payouts
    */
   getAll: (params = {}) => {
     return apiClient.get(ENDPOINT, { params });
   },
 
   /**
-   * Get single payout
+   * Fetch a single payout record by ID.
+   * GET /api/v1/payouts/:id
    */
   getById: (id) => {
     return apiClient.get(`${ENDPOINT}/${id}`);
   },
 
   /**
-   * Create payout
+   * Get total amount of payouts disbursed in the current UTC day.
+   * GET /api/v1/payouts/total/today
    */
-  create: (data) => {
-    return apiClient.post(ENDPOINT, data);
+  getTodayTotal: () => {
+    return apiClient.get(`${ENDPOINT}/total/today`);
   },
 
   /**
-   * Update payout status
+   * Project a payout amount based on a hypothetical disruption and worker ID.
+   * POST /api/v1/calculate_payout
    */
-  updateStatus: (id, status) => {
-    return apiClient.patch(`${ENDPOINT}/${id}/status`, { status });
-  },
-
-  /**
-   * Get payout statistics
-   */
-  getStats: () => {
-    return apiClient.get(`${ENDPOINT}/stats`);
-  },
-
-  /**
-   * Get escrow data
-   */
-  getEscrow: (params = {}) => {
-    return apiClient.get(`${ENDPOINT}/escrow`, { params });
-  },
-
-  /**
-   * Release escrow
-   */
-  releaseEscrow: (id) => {
-    return apiClient.patch(`${ENDPOINT}/${id}/escrow/release`);
-  },
-
-  /**
-   * Re-verify escrow
-   */
-  reverifyEscrow: (id) => {
-    return apiClient.patch(`${ENDPOINT}/${id}/escrow/reverify`);
-  },
-
-  /**
-   * Trigger payout simulation
-   */
-  triggerSimulation: (data) => {
-    return apiClient.post(`${ENDPOINT}/simulation`, data);
-  },
-
-  /**
-   * Get payout history for worker
-   */
-  getWorkerHistory: (workerId, params = {}) => {
-    return apiClient.get(`/workers/${workerId}/payouts`, { params });
+  calculateProjection: (data) => {
+    return apiClient.post('/api/v1/calculate_payout', data);
   },
 };

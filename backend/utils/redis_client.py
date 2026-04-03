@@ -17,22 +17,48 @@ from config.settings import settings
 
 logger = logging.getLogger("gigkavach.cache")
 
+# Mock Redis client for localized development or fallback
+class MockRedis:
+    """Safely simulates a Redis client to prevent logic crashes if server is down."""
+    def __init__(self, url):
+        self.url = url
+    async def get(self, *args, **kwargs): return None
+    async def set(self, *args, **kwargs): return True
+    async def delete(self, *args, **kwargs): return True
+    async def expire(self, *args, **kwargs): return True
+    async def aclose(self, *args, **kwargs): pass
+    def __getattr__(self, name):
+        # Gracefully handle any other redis methods
+        async def mock_method(*args, **kwargs): return None
+        return mock_method
+
 # Redis Client singleton
 redis_client: Optional[Redis] = None
 
 async def get_redis() -> Redis:
-    """Returns the Redis connection, initializing it if necessary."""
+    """Returns the Redis connection, initializing it if necessary. Falls back to Mock if offline."""
     global redis_client
     if not redis_client:
-        redis_client = from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
-        logger.info(f"Connected to Redis at {settings.REDIS_URL}")
+        try:
+            # Try to connect to real Redis
+            redis_client = from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+            # Test connection immediately
+            await redis_client.ping()
+            logger.info(f"Connected to Redis at {settings.REDIS_URL}")
+        except Exception as e:
+            logger.warning(f"⚠️  Redis unavailable at {settings.REDIS_URL}. Falling back to MOCK mode. Error: {e}")
+            redis_client = MockRedis(settings.REDIS_URL)
+            
     return redis_client
 
 async def close_redis():
     """Closes the Redis connection."""
     global redis_client
     if redis_client:
-        await redis_client.aclose()
+        try:
+            await redis_client.aclose()
+        except:
+            pass
         redis_client = None
 
 # DCI cache TTL (seconds)

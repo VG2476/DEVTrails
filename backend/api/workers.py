@@ -34,7 +34,7 @@ from config.settings import settings
 
 logger = logging.getLogger("gigkavach.workers")
 
-router = APIRouter(prefix="/api/v1", tags=["Workers"])
+router = APIRouter(prefix="/worker", tags=["Workers"])
 
 
 # ─── Helper: Current week window ─────────────────────────────────────────────

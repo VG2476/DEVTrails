@@ -1,36 +1,32 @@
 /**
- * DCI (Disruption Composite Index) API endpoints
+ * DCI (Disruption Composite Index) API Client
  * 
- * IMPORTANT: Backend uses 'pincode' (not 'zone'), and returns combined current + history
- * All aspirational methods removed to match actual backend capabilities.
+ * Maps to live backend routes with a mix of /api/v1 and root prefixes.
  */
 import apiClient from './client.js';
 
-const ENDPOINT = '/dci';
-
 export const dciAPI = {
   /**
-   * Get current DCI score and 24hr history for a pincode
-   * Returns: { pincode, current: {...}, history_24h: [...] }
+   * Get current DCI score and 24hr history for a specific pincode.
+   * GET /api/v1/dci/:pincode
    */
   getByPincode: (pincode) => {
-    return apiClient.get(`${ENDPOINT}/${pincode}`);
+    return apiClient.get(`/api/v1/dci/${pincode}`);
   },
 
   /**
-   * Get latest DCI alerts across all active zones (score > 65)
-   * Used by Dashboard for "Active Zones" widget
-   * Returns: { alerts: [ {pincode, area_name, dci_score, triggered_at} ] }
+   * Get latest DCI alerts across all active zones (score > 65).
+   * GET /api/v1/dci-alerts/latest
    */
-  getLatestAlerts: () => {
-    return apiClient.get(`${ENDPOINT}/latest-alerts`);
+  getLatestAlerts: (limit = 3) => {
+    return apiClient.get('/api/v1/dci-alerts/latest', { params: { limit } });
   },
 
   /**
-   * Get total DCI today (aggregate metric)
-   * Returns: { total_dci_today: number }
+   * Get total DCI triggers today (aggregate metric).
+   * GET /api/v1/dci/total/today
    */
-  getTotalToday: () => {
-    return apiClient.get(`${ENDPOINT}/total/today`);
+  getTodayTotal: () => {
+    return apiClient.get('/api/v1/dci/total/today');
   },
 };

@@ -18,7 +18,7 @@ from fastapi import APIRouter, HTTPException
 from utils.datetime_utils import is_within_shift
 
 logger = logging.getLogger("gigkavach.payouts")
-router = APIRouter(prefix="/api", tags=["Payouts & SLA"])
+router = APIRouter(tags=["Payouts & SLA"])
 STATUS_DISPLAY_MAP = {
     "pending": "triggered",
     "processing": "calculating",
