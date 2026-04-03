@@ -1,0 +1,18 @@
+import pytest
+from unittest.mock import MagicMock
+
+@pytest.fixture(autouse=True)
+def mock_supabase_for_whatsapp(monkeypatch):
+    mock_sb = MagicMock()
+    # By default, pretend no user exists (data=[]) so we can test "not registered" 
+    # and "new user onboarding".
+    mock_sb.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = type('obj', (object,), {'data': []})()
+    mock_sb.table.return_value.select.return_value.eq.return_value.execute.return_value = type('obj', (object,), {'data': []})()
+    mock_sb.table.return_value.insert.return_value.execute.return_value = type('obj', (object,), {'data': [{}]})()
+    mock_sb.table.return_value.update.return_value.eq.return_value.execute.return_value = type('obj', (object,), {'data': [{}]})()
+    
+    # Patch in onboarding_handlers
+    try:
+        monkeypatch.setattr("services.onboarding_handlers.get_supabase", lambda: mock_sb)
+    except Exception:
+        pass

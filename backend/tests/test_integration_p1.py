@@ -105,7 +105,9 @@ def test_payout_calculation():
         city='Bengaluru',
         zone_density='High',
         shift='morning',
-        disruption_type='Heavy_Rainfall'
+        disruption_type='Heavy_Rainfall',
+        hour_of_day=10,
+        day_of_week=0
     )
     
     assert 'payout' in result or callable(calculate_payout)
@@ -301,6 +303,7 @@ def test_payout_error_handling():
 
 def test_fraud_model_unavailable():
     """Test: Graceful fallback if fraud models not loaded"""
+    from services.fraud_service import check_fraud
     # Should return safe decision (APPROVE with low confidence)
     assert callable(check_fraud) or True
 
