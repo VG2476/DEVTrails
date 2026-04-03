@@ -67,7 +67,7 @@ export const DCIChart = ({
             .reverse()                    // oldest → newest (API returns desc)
             .slice(-12)                   // last 12 samples → one per 5 min
             .map((row: Record<string, unknown>) => ({
-              time: new Date(row.timestamp).toLocaleTimeString('en-IN', {
+              time: new Date(row.timestamp as string).toLocaleTimeString('en-IN', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false,

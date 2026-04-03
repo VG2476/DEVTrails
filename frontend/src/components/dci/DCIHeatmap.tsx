@@ -128,8 +128,8 @@ export const DCIHeatmap = () => {
         if (alerts.length > 0) {
           const mapped: ZoneData[] = alerts.map((a: AlertPayload, idx: number) => ({
             id: idx + 1,
-            name: a.neighborhood || a.area_name || `Zone ${a.pin_code}`,
-            shortName: a.neighborhood || a.pin_code,
+            name: a.neighborhood || a.area_name || (a.pin_code ? `Zone ${a.pin_code}` : 'Unknown Zone'),
+            shortName: a.neighborhood || a.pin_code || 'Unknown',
             lat: 12.9 + idx * 0.06,
             lng: 77.6 + idx * 0.06,
             dci: Math.round(a.dci ?? a.dci_score ?? 0),
@@ -153,13 +153,13 @@ export const DCIHeatmap = () => {
 
   // Reinitialise Leaflet map whenever zone list changes
   useEffect(() => {
-    let map: unknown;
+    let map: import('leaflet').Map;
     const init = async () => {
       if (!containerRef.current) return;
       const L = (await import('leaflet')).default;
       const container = L.DomUtil.get('dci-heatmap-map');
-      if (container && (container as Record<string, unknown>)._leaflet_id) {
-        (container as Record<string, unknown>)._leaflet_id = null;
+      if (container && (container as unknown as Record<string, unknown>)._leaflet_id) {
+        (container as unknown as Record<string, unknown>)._leaflet_id = null;
       }
       map = L.map('dci-heatmap-map').setView([12.9716, 77.5946], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
