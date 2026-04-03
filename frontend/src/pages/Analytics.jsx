@@ -259,7 +259,7 @@ export const Analytics = () => {
                 <YAxis yAxisId="right" orientation="right" stroke="#6b7280" label={{ value: 'Loss Ratio %', angle: 90, position: 'insideRight' }} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                  formatter={(value: any) => (typeof value === 'number' ? value.toLocaleString() : value)}
+                  formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : value)}
                 />
                 <Legend />
                 <Bar dataKey="premiums" fill="#3B82F6" name="Premiums Collected" radius={[8, 8, 0, 0]} />
@@ -301,7 +301,7 @@ export const Analytics = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: any) => [`${v}%`, 'Share']} />
+                <Tooltip formatter={(v) => [`${v}%`, 'Share']} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
