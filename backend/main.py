@@ -198,14 +198,14 @@ app.add_middleware(
 # ─── Route Registration ───────────────────────────────────────────────────────
 # Standardized to /api/v1 for all frontend-facing endpoints
 
-app.include_router(health_router)
+app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")           # Authentication routes
-app.include_router(workers_router)    # POST /api/v1/register — Sumukh
-app.include_router(policies_router)   # GET + PATCH /api/v1/policy/{id} — Sumukh
-app.include_router(dci_router, prefix="/api/v1")           # Varshit — DCI engine
-app.include_router(whatsapp_router, prefix="/api")          # Sumukh — Twilio webhook at /api/whatsapp/webhook
-app.include_router(payouts_router)                          # Already has prefix="/api" in router definition
-app.include_router(fraud_router, prefix="/api/v1")          # Vijeth — fraud assessment (Task 8)
+app.include_router(workers_router, prefix="/api/v1")        # POST /api/v1/register
+app.include_router(policies_router, prefix="/api/v1")       # GET + PATCH /api/v1/policy/{id}
+app.include_router(dci_router, prefix="/api/v1")            # Varshit — DCI engine
+app.include_router(whatsapp_router, prefix="/api/v1")       # Standardized prefix
+app.include_router(payouts_router, prefix="/api/v1")        # Consolidated prefix
+app.include_router(fraud_router, prefix="/api/v1")          # Vijeth — fraud assessment
 # TODO: app.include_router(dashboard_router, prefix="/api/v1")  # V Saatwik — admin metrics
 
 
