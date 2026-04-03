@@ -4,7 +4,7 @@ import { formatCurrency, formatPercentage, formatDate } from '../utils/formatter
 import { Button } from '../components/common/Button';
 import { RealTimePayoutFeed } from '../components/payouts/RealTimePayoutFeed';
 import { WorkerModal } from '../components/workers/WorkerModal';
-import { dashboardAPI } from '../api/dashboardAPI';
+import { payoutAPI } from '../api/payouts';
 
 // Fallback mock data for when API is unavailable
 const mockPayouts = [
@@ -34,7 +34,7 @@ export const Payouts = () => {
     const fetchPayouts = async () => {
       try {
         setLoading(true);
-        const res = await dashboardAPI.getRecentPayouts();
+        const res = await payoutAPI.getAll({ limit: 50 });
         
         // Transform API response to table format
         const formatted = res.data.payouts.map((p) => ({
