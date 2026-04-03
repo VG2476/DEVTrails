@@ -102,7 +102,7 @@ def test_payout_calculation():
         disruption_duration=120,  # 2 hours
         dci_score=78.5,
         worker_id='W123',
-        city='Bengaluru',
+        city='Chennai',
         zone_density='High',
         shift='morning',
         disruption_type='Heavy_Rainfall',

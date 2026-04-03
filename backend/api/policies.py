@@ -38,7 +38,7 @@ from utils.db import get_supabase
 
 logger = logging.getLogger("gigkavach.policies")
 
-router = APIRouter(prefix="/policy", tags=["Policies"])
+router = APIRouter(tags=["Policies"])
 
 
 # ─── Helper: Next Monday ──────────────────────────────────────────────────────

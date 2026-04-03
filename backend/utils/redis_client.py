@@ -22,9 +22,19 @@ class MockRedis:
     """Safely simulates a Redis client to prevent logic crashes if server is down."""
     def __init__(self, url):
         self.url = url
-    async def get(self, *args, **kwargs): return None
-    async def set(self, *args, **kwargs): return True
-    async def delete(self, *args, **kwargs): return True
+        self._store = {}
+    async def get(self, key, *args, **kwargs): return self._store.get(key)
+    async def set(self, key, value, *args, **kwargs):
+        if kwargs.get('nx') and key in self._store: return False
+        self._store[key] = value
+        return True
+    async def setex(self, key, time, value):
+        self._store[key] = value
+        return True
+    async def delete(self, key, *args, **kwargs):
+        if key in self._store:
+            del self._store[key]
+        return True
     async def expire(self, *args, **kwargs): return True
     async def aclose(self, *args, **kwargs): pass
     def __getattr__(self, name):
