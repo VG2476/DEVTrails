@@ -2,13 +2,15 @@
  * Frontend constants and API URLs
  */
 
+const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
 const DEFAULT_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  `${VITE_API_URL}`;  // Always use local backend in development
+  `http://${hostname}:8000`;
 
 const DEFAULT_WS_BASE_URL =
   import.meta.env.VITE_WS_BASE_URL ||
-  `${VITE_API_URL}`;  // Always use local WebSocket in development
+  `ws://${hostname}:8000`;
 
 // API Base Configuration
 export const API_CONFIG = {

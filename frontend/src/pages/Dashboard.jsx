@@ -369,6 +369,17 @@ const value = liveMetrics[card.key] ?? metrics[card.key] ?? 0;
                     </span>
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{zone.trigger}</p>
+                  
+                  {/* Explanation Factor */}
+                  {zone.disruption_types && zone.disruption_types.length > 0 && (
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gigkavach-orange animate-pulse" />
+                      <span className="text-[10px] font-bold text-gigkavach-orange uppercase tracking-wider">
+                        Main Driver: {zone.disruption_types[0]}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${

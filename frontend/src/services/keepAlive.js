@@ -11,6 +11,7 @@
  */
 
 import { useEffect } from 'react';
+import { API_CONFIG } from '../utils/constants';
 
 const HEALTH_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const HEALTH_ENDPOINT = '/health';
@@ -25,7 +26,7 @@ const startKeepAlive = () => {
 
   const ping = async () => {
     try {
-      const baseUrl = `${VITE_API_URL}`;  // Always use local backend
+      const baseUrl = API_CONFIG.BASE_URL;
 
       const url = `${baseUrl}${HEALTH_ENDPOINT}`;
 

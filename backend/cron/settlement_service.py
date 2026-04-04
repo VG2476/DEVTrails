@@ -9,7 +9,7 @@ import logging
 import asyncio
 from datetime import datetime, time, timedelta, timezone
 from api.payouts import calculate_payout, PayoutRequest
-from services.eligibility_service import check_eligibility, WORKER_POLICIES_DB
+from services.eligibility_service import check_eligibility
 
 logger = logging.getLogger("gigkavach.settlement")
 

@@ -235,3 +235,8 @@ from api.worker_list import router as workers_list_router
 app.include_router(workers_list_router, prefix="/api/v1")
 from api.worker_detail import router as workers_detail_router
 app.include_router(workers_detail_router, prefix="/api/v1")
+
+# ─── Judge's Demo Mode Router ────────────────────────────────────────────────
+# SAFE NON-BLOCKING TRIGGER (Threaded)
+from api.demo import router as demo_router
+app.include_router(demo_router, prefix="/api/v1")

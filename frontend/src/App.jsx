@@ -11,12 +11,14 @@ import { Analytics } from './pages/Analytics';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useBackendKeepAlive } from './services/keepAlive';
+import { JudgeConsole } from './components/demo/JudgeConsole';
 
 // Protected Layout wrapper
 const ProtectedLayout = ({ children }) => {
   return (
     <ProtectedRoute>
       {children}
+      <JudgeConsole />
     </ProtectedRoute>
   );
 };
