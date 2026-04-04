@@ -25,7 +25,7 @@ const startKeepAlive = () => {
 
   const ping = async () => {
     try {
-      const baseUrl = 'http://localhost:8000';  // Always use local backend
+      const baseUrl = `${VITE_API_URL}`;  // Always use local backend
 
       const url = `${baseUrl}${HEALTH_ENDPOINT}`;
 
