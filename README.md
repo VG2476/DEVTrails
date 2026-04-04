@@ -66,7 +66,7 @@
 
 ## 🎥 Demo Video
 
-[Click here to watch the full walkthrough](https://drive.google.com/file/d/14i5vJTVcu6uJG37t0oL7duJEv63TAdXr/view?usp=sharing)
+[Click here to watch the full walkthrough](https://1drv.ms/v/c/7bd7439be05079b7/IQDJxlimakBJQKvXDtoXzXlvAb_rSXevm4Kt59nV4PIHC6E?e=PCydFh)
 
 ---
 
@@ -184,8 +184,7 @@ INFO:     Application startup complete
 ```
 
 ✅ **Backend is running!**
-- Main app: [http://localhost:8000](http://localhost:8000)
-- API docs: [http://localhost:8000/docs](http://localhost:8000/docs) (interactive Swagger UI)
+- Main app: (13.51.165.52:8000)
 
 **⚠️ Keep this terminal open!**
 
@@ -234,7 +233,7 @@ Expected output:
 ```
 
 ✅ **Frontend is running!**
-- App: [http://localhost:3000](http://localhost:3000)
+- App: 13.51.165.52:3000
 
 ---
 
