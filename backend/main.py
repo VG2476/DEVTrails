@@ -179,6 +179,7 @@ cors_origins = [
     "http://localhost:5173",           # Local dev (Vite)
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "http://13.51.165.52:3000",
 ]
 
 # Add production/AWS URL from environment variable
