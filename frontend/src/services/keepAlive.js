@@ -25,11 +25,7 @@ const startKeepAlive = () => {
 
   const ping = async () => {
     try {
-      const baseUrl =
-        import.meta.env.PROD
-          ? 'https://devtrails-backend-dnlr.onrender.com'
-          : import.meta.env.VITE_BACKEND_PROXY_TARGET ||
-            'https://devtrails-backend-dnlr.onrender.com';
+      const baseUrl = 'http://localhost:8000';  // Always use local backend
 
       const url = `${baseUrl}${HEALTH_ENDPOINT}`;
 

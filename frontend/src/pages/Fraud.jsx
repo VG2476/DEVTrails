@@ -180,7 +180,7 @@ export const Fraud = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Fraud Operations Center</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Fraud Operations Center (PHASE 3 DELIVERABLE) </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Real-time signal monitoring, risk assessment & case management</p>
       </div>
 

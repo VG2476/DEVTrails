@@ -112,8 +112,8 @@ const buildTierData = (workers) => {
 export const Analytics = () => {
   const [weeklyData, setWeeklyData] = useState(FALLBACK_WEEKLY);
   const [tierData, setTierData] = useState(FALLBACK_TIERS);
-  const [todayPayout, setTodayPayout] = useState<number | null>(null);
-  const [totalWorkers, setTotalWorkers] = useState<number | null>(null);
+  const [todayPayout, setTodayPayout] = useState(null);
+  const [totalWorkers, setTotalWorkers] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
 

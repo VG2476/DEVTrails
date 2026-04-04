@@ -31,7 +31,7 @@ export const Settings = () => {
     <div className="space-y-6 max-w-4xl">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings (PHASE 3 DELIVERABLE)</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage system configuration and preferences</p>
       </div>
 

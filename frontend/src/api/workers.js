@@ -8,25 +8,25 @@ import apiClient from './client.js';
 export const workerAPI = {
   /**
    * Get all workers with pagination and filters.
-   * GET /api/workers
+   * GET /api/v1/api/workers
    */
   getAll: (params = {}) => {
-    return apiClient.get('/api/workers', { params });
+    return apiClient.get('/api/v1/api/workers', { params });
   },
 
   /**
    * Get single worker by ID with full profile details.
-   * GET /api/workers/:id
+   * GET /api/v1/api/workers/{worker_id}
    */
-  getById: (id) => {
-    return apiClient.get(`/api/workers/${id}`);
+  getById: (worker_id) => {
+    return apiClient.get(`/api/v1/api/workers/${worker_id}`);
   },
 
   /**
    * Get the total count of workers with an active policy this calendar week.
-   * GET /api/workers/active/week (Note: mounted with /api prefix)
+   * GET /api/v1/workers/active/week
    */
   getActiveWeekCount: () => {
-    return apiClient.get('/api/workers/active/week');
+    return apiClient.get('/api/v1/workers/active/week');
   },
 };

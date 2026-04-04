@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
   // Fetch user profile from your backend or Supabase
   const fetchUserProfile = async (userId) => {
     try {
-      // Option 1: Fetch from Supabase profiles table
+      // Option 1: Fetch from Supabase workers table
       const { data, error } = await supabase
-        .from('profiles')
+        .from('workers')
         .select('*')
         .eq('id', userId)
         .single();
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
       if (!user) throw new Error('No user logged in');
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('workers')
         .update(updates)
         .eq('id', user.id)
         .select()

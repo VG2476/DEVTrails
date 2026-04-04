@@ -117,28 +117,28 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
 
   return (
     <div className="bg-white dark:bg-gigkavach-surface rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gigkavach-surface">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Processing payouts (live)</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Polling every {Math.round(pollMs / 1000)}s · Latest {limit}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
-            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-            Live
-          </span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            Processing payouts (live)
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+              <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+              Live
+            </span>
+          </h2>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5">Polling every {Math.round(pollMs / 1000)}s · Latest {limit}</p>
         </div>
       </div>
 
       {error ? (
-        <div className="px-6 py-4 text-sm text-red-700 dark:text-red-300 bg-red-50/50 dark:bg-red-950/30">
+        <div className="px-6 py-4 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-800">
           {error}
         </div>
       ) : null}
 
       <div className="max-h-[420px] overflow-y-auto">
         <div className="min-w-[860px]">
-          <div className="grid grid-cols-12 gap-3 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-12 gap-3 px-6 py-4 text-[11px] font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
             <div className="col-span-3">Worker</div>
             <div className="col-span-2">Amount</div>
             <div className="col-span-1 text-center">DCI</div>
@@ -148,7 +148,7 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
           </div>
 
           {isLoading ? (
-            <div className="px-6 py-6 text-sm text-gray-600 dark:text-gray-300">Loading…</div>
+            <div className="px-6 py-8 text-sm text-gray-600 dark:text-gray-400 text-center">Loading…</div>
           ) : rows.length ? (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {rows.map((p) => {
@@ -157,7 +157,7 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
                 return (
                   <div
                     key={p.id}
-                    className={`grid grid-cols-12 gap-3 px-6 py-3 items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                    className={`grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
                       isNew ? 'animate-feed-new' : ''
                     }`}
                   >
@@ -166,7 +166,7 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
                         <button
                           type="button"
                           onClick={() => onWorkerClick(p.worker_id)}
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 hover:underline text-left truncate w-full transition-colors"
+                          className="text-sm font-medium text-gray-900 hover:text-gigkavach-orange dark:text-white dark:hover:text-gigkavach-orange hover:underline text-left truncate w-full transition-colors"
                         >
                           {p.worker_name || '—'}
                         </button>
@@ -177,18 +177,18 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
                     <div className="col-span-2 font-mono font-bold text-gray-900 dark:text-white">
                       {formatCurrency(Number(p.amount) || 0)}
                     </div>
-                    <div className="col-span-1 text-center font-mono text-sm text-gray-700 dark:text-gray-200">
+                    <div className="col-span-1 text-center font-mono text-sm text-gray-700 dark:text-gray-300">
                       {p.dci_score === null || p.dci_score === undefined ? '—' : Number(p.dci_score).toFixed(0)}
                     </div>
-                    <div className="col-span-1 text-center font-mono text-sm text-gray-700 dark:text-gray-200">
+                    <div className="col-span-1 text-center font-mono text-sm text-gray-700 dark:text-gray-300">
                       {p.fraud_score === null || p.fraud_score === undefined ? '—' : Number(p.fraud_score).toFixed(0)}
                     </div>
                     <div className="col-span-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${badge.className}`}>
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${badge.className}`}>
                         {badge.label}
                       </span>
                     </div>
-                    <div className="col-span-3 text-sm text-gray-600 dark:text-gray-300">
+                    <div className="col-span-3 text-sm text-gray-600 dark:text-gray-400">
                       {p.timestamp ? formatDate(p.timestamp, 'datetime') : '—'}
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export function RealTimePayoutFeed({ pollMs = DEFAULT_POLL_MS, limit = DEFAULT_L
               })}
             </div>
           ) : (
-            <div className="px-6 py-6 text-sm text-gray-600 dark:text-gray-300">No processing payouts right now.</div>
+            <div className="px-6 py-8 text-sm text-gray-600 dark:text-gray-400 text-center">No processing payouts right now.</div>
           )}
         </div>
       </div>
