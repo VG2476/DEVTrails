@@ -88,34 +88,56 @@ const [isModalOpen, setIsModalOpen] = useState(false);
   const fetchWorkers = async () => {
     setLoading(true);
     try {
+      console.log('[WORKERS] Fetching from API...');
       const response = await workerAPI.getAll();
+      
+      console.log('[WORKERS] API Response:', response);
+      
+      // Handle both direct array response and wrapped response
+      const workersData = Array.isArray(response) ? response : (response.data || []);
+      
+      if (!Array.isArray(workersData)) {
+        console.error('[WORKERS] Invalid response format:', response);
+        setWorkers([]);
+        return;
+      }
 
-      const formatted = response.data.map((w) => ({
+      const formatted = workersData.map((w) => ({
         id: w.id,
-        name: w.name,
-        phone: w.phone,
+        name: w.name || 'Unknown',
+        phone: w.phone || '',
         upi: w.upi_id || 'N/A',
         zone: w.zone || 'N/A',
         status: w.status || 'inactive',
-        plan: w.plan,
+        plan: w.plan || 'Shield Basic',
         premium:
-          w.plan === 'basic'
+          w.plan === 'basic' || !w.plan
             ? 69
             : w.plan === 'plus'
             ? 89
-            : 99,
-        coverage: w.coverage,
+            : w.plan === 'pro'
+            ? 99
+            : 69,
+        coverage: w.coverage || 0,
         coverageWindow: 'Flexible',
-
         last7DaysEarnings: [500, 700, 600, 800, 650, 720, 900],
         dciHistory: [],
         fraudStatus: 'clean',
         payoutHistory: [],
       }));
 
+      console.log('[WORKERS] Formatted workers:', formatted);
       setWorkers(formatted);
     } catch (err) {
-      console.error('Error fetching workers:', err);
+      console.error('[WORKERS] Error fetching workers:', err);
+      console.error('[WORKERS] Error details:', {
+        message: err.message,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        url: err.config?.url
+      });
+      setWorkers([]);
     } finally {
       setLoading(false);
     }

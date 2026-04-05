@@ -3,14 +3,32 @@
  */
 
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const port = typeof window !== 'undefined' ? window.location.port : '8000';
 
+// Determine API base URL from environment or current location
 const DEFAULT_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  `http://${hostname}:8000`;
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? `http://${hostname}:8000`
+    : `http://${hostname}:8000`);
+
+// Log API configuration for debugging
+if (typeof window !== 'undefined') {
+  console.log('[API_CONFIG]', {
+    hostname,
+    port,
+    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    resolved: DEFAULT_API_BASE_URL
+  });
+}
 
 const DEFAULT_WS_BASE_URL =
   import.meta.env.VITE_WS_BASE_URL ||
-  `ws://${hostname}:8000`;
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? `ws://${hostname}:8000`
+    : `ws://${hostname}:8000`);
 
 // API Base Configuration
 export const API_CONFIG = {

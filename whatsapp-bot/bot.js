@@ -174,6 +174,7 @@ client.on('message', async (msg) => {
     const messageBody = msg.body.trim();
 
     log.message(`Received from ${phone}: "${messageBody.substring(0, 60)}${messageBody.length > 60 ? '...' : ''}"`);
+    console.log(`[MESSAGE_RECEIVED] From: ${phone}, Body: ${messageBody}, Type: ${msg.type}`);
 
     // Route message to appropriate handler
     const response = await routeMessage(phone, messageBody);
@@ -182,14 +183,19 @@ client.on('message', async (msg) => {
       // Send reply
       await msg.reply(response.text);
       log.message(`Replied to ${phone}: "${response.text.substring(0, 50)}${response.text.length > 50 ? '...' : ''}"`);
+      console.log(`[MESSAGE_SENT] To: ${phone}, Text: ${response.text.substring(0, 50)}`);
 
       // Update session if needed
       if (response.updateSession) {
         SessionManager.updateSession(phone, response.sessionData);
+        console.log(`[SESSION_UPDATED] Phone: ${phone}, Data:`, response.sessionData);
       }
+    } else {
+      log.warn(`No response generated for message from ${phone}`);
     }
   } catch (error) {
     log.error(`Message handler error: ${error.message}`);
+    console.error(`[MESSAGE_HANDLER_ERROR]`, error);
     try {
       await msg.reply(
         '⚠️ Something went wrong. Please try again or contact support.\n\nFor help, send: HELP'

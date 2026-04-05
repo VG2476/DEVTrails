@@ -55,9 +55,26 @@ export async function routeMessage(phone, messageBody) {
     const command = messageBody.trim().toUpperCase();
     const session = SessionManager.getOrCreateSession(phone);
 
+    console.log(`[MESSAGE_ROUTE] Phone: ${phone}, Command: ${command}, Onboarded: ${session.isOnboarded}, Step: ${session.onboardingStep}`);
+
     // ─────────────────────────────────────────────────────────────
     // Global Commands (Available Anytime)
     // ─────────────────────────────────────────────────────────────
+
+    // Handle JOIN as entry point for new users
+    if (command === 'JOIN' || command === 'START') {
+      if (session.isOnboarded) {
+        return {
+          text: MESSAGES.already_onboarded[session.language] || MESSAGES.already_onboarded.en,
+          updateSession: false,
+        };
+      }
+      return {
+        text: MESSAGES.language_selection.en,
+        updateSession: true,
+        sessionData: { onboardingStep: 'language_select' },
+      };
+    }
 
     if (command === 'HELP') {
       return {

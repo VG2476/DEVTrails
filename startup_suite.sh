@@ -68,10 +68,21 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Kill old processes if they exist
 echo -e "${YELLOW}🧹 Cleaning up old processes...${NC}"
-pkill -f "uvicorn main:app" > /dev/null 2>&1 || true
-pkill -f "vite" > /dev/null 2>&1 || true
-pkill -f "node bot.js" > /dev/null 2>&1 || true
-sleep 1
+pkill -9 -f "uvicorn main:app" > /dev/null 2>&1 || true
+pkill -9 -f "vite" > /dev/null 2>&1 || true
+pkill -9 -f "node bot.js" > /dev/null 2>&1 || true
+pkill -9 -f "node.*bot" > /dev/null 2>&1 || true
+sleep 3
+
+# Free up ports if still in use
+for port in 8000 3000 3001; do
+  lsof -i :$port -t | xargs -r kill -9 2>/dev/null || true
+done
+sleep 2
+
+# Kill any lingering Chrome/browser processes
+pkill -9 -f "Chrome" > /dev/null 2>&1 || true
+pkill -9 -f "Chromium" > /dev/null 2>&1 || true
 
 # Create logs directory if it doesn't exist
 mkdir -p "$PROJECT_ROOT/backend/logs"
@@ -85,6 +96,7 @@ EOF
 cat >> "$PROJECT_ROOT/frontend/.env" << EOF
 VITE_API_URL=$API_URL
 VITE_API_BASE_URL=$API_URL
+VITE_BACKEND_PROXY_TARGET=$API_URL
 VITE_WS_BASE_URL=ws://$API_HOST:8000
 VITE_ENABLE_MOCK_DATA=false
 VITE_DEBUG_MODE=false
@@ -154,7 +166,7 @@ if [ ! -d ".venv" ]; then
 fi
 
 # Install/upgrade dependencies
-.venv/bin/pip install -q -r requirements.txt
+.venv/bin/pip install -q --no-cache-dir -r requirements.txt
 
 # Start backend using absolute path (bypasses venv activation issues)
 nohup .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --reload > backend.log 2>&1 &
@@ -184,8 +196,8 @@ cd "$PROJECT_ROOT/frontend"
 
 # Ensure dependencies are installed
 if [ ! -d "node_modules" ]; then
-  echo "Installing frontend dependencies..."
-  npm install --legacy-peer-deps || {
+  echo "Installing frontend dependencies (opt-out mode for disk space)..."
+  npm install --legacy-peer-deps --no-optional --ignore-scripts || {
     echo -e "${RED}❌ npm install failed${NC}"
     cd "$PROJECT_ROOT"
     exit 1
@@ -219,8 +231,8 @@ cd "$PROJECT_ROOT/whatsapp-bot"
 
 # Ensure dependencies are installed
 if [ ! -d "node_modules" ]; then
-  echo "Installing bot dependencies..."
-  npm install --legacy-peer-deps || {
+  echo "Installing bot dependencies (opt-out mode for disk space)..."
+  npm install --legacy-peer-deps --no-optional --ignore-scripts || {
     echo -e "${RED}❌ npm install failed${NC}"
     exit 1
   }

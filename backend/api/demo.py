@@ -103,11 +103,13 @@ async def trigger_demo_disruption(req: DemoTriggerRequest):
     success = await asyncio.to_thread(trigger_disruption_sync, req.factor, req.score)
     
     if not success:
+        logger.error(f"Demo injection failed for factor: {req.factor}")
         raise HTTPException(status_code=500, detail="Database injection failed")
         
     return {
         "status": "success",
         "factor": req.factor,
         "message": f"Simulated {req.factor} disruption injected successfully.",
-        "pincode": DEMO_PINCODE
+        "pincode": DEMO_PINCODE,
+        "score": req.score
     }

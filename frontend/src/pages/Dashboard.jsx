@@ -47,27 +47,33 @@ const [recentPayouts, setRecentPayouts] = useState([]);
   useEffect(() => {
     const fetchPayouts = async () => {
       try {
+        console.log('[PAYOUTS] Fetching...');
         const res = await payoutAPI.getAll({ limit: 3 });
+        
+        console.log('[PAYOUTS] Response:', res);
 
-        // backend shape is { payouts: [...] }
-        const formatted = (res.payouts || []).map((p) => ({
+        // Handle both response formats
+        const payoutsData = res.payouts || res.data || [];
+        
+        const formatted = payoutsData.map((p) => ({
           id: p.id,
-          initials: p.worker_name
+          initials: (p.worker_name || p.name || 'Unknown')
             ?.split(" ")
             .map((n) => n[0])
             .join("")
             .slice(0, 2)
             .toUpperCase(),
-          name: p.worker_name,
+          name: p.worker_name || p.name || 'Unknown Worker',
           tier: "Shield Pro",
-          amount: p.amount,
-          status: p.status === "payout_sent" ? "sent" : "processing",
-          timestamp: timeAgo(p.timestamp),
+          amount: p.amount || p.final_amount || 0,
+          status: (p.status === "payout_sent" || p.status === "completed") ? "sent" : "processing",
+          timestamp: timeAgo(p.timestamp || p.created_at || new Date()),
         }));
 
+        console.log('[PAYOUTS] Formatted:', formatted);
         setRecentPayouts(formatted);
       } catch (err) {
-        console.error(err);
+        console.error('[PAYOUTS] Error:', err);
       }
     };
 
@@ -81,11 +87,19 @@ const [loading, setLoading] = useState(true);
     const fetchZones = async () => {
       try {
         setLoading(true);
-
+        console.log('[DCI_ALERTS] Fetching...');
+        
         const res = await dciAPI.getLatestAlerts(3);
-        setActiveZones(res.alerts || []);
+        
+        console.log('[DCI_ALERTS] Response:', res);
+        
+        const alertsData = res.alerts || res.data || [];
+        setActiveZones(alertsData);
+        
+        console.log('[DCI_ALERTS] Set zones:', alertsData);
       } catch (err) {
-        console.error(err);
+        console.error('[DCI_ALERTS] Error:', err);
+        setActiveZones([]);
       } finally {
         setLoading(false);
       }

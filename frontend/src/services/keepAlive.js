@@ -14,7 +14,7 @@ import { useEffect } from 'react';
 import { API_CONFIG } from '../utils/constants';
 
 const HEALTH_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
-const HEALTH_ENDPOINT = '/health';
+const HEALTH_ENDPOINT = '/api/v1/health/';
 
 let keepAliveIntervalId = null;
 

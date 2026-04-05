@@ -10,7 +10,6 @@ import { Heatmap } from './pages/Heatmap';
 import { Analytics } from './pages/Analytics';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
-import { useBackendKeepAlive } from './services/keepAlive';
 import { JudgeConsole } from './components/demo/JudgeConsole';
 
 // Protected Layout wrapper
@@ -56,8 +55,6 @@ const DashboardLayout = () => {
 };
 
 export default function App() {
-  // Keep backend awake on Render (prevents free tier spin-down)
-  useBackendKeepAlive();
 
   // Initialize dark mode from localStorage
   useEffect(() => {
