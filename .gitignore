@@ -14,6 +14,8 @@
 backend/__pycache__/
 backend/*.pyc
 backend/*.pyo
+backend/*.pyd
+backend/*.so
 backend/*.egg-info/
 backend/.venv/
 backend/venv/
@@ -22,6 +24,12 @@ backend/.coverage
 backend/htmlcov/
 backend/logs/
 backend/*.log
+backend/.ipynb_checkpoints/
+backend/dist/
+backend/build/
+backend/.tox/
+backend/.eggs/
+backend/*.egg
 
 # ═════════════════════════════════════════════════════════════════════
 # Frontend (Node.js)
@@ -33,6 +41,28 @@ frontend/coverage/
 frontend/.turbo/
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.npm
+frontend/.eslintcache
+frontend/.cache
+
+# ═════════════════════════════════════════════════════════════════════
+# WhatsApp Bot
+# ═════════════════════════════════════════════════════════════════════
+whatsapp-bot/node_modules/
+whatsapp-bot/sessions/
+whatsapp-bot/.wwebjs_auth/
+whatsapp-bot/.wwebjs_cache/
+whatsapp-bot/npm-debug.log*
+whatsapp-bot/yarn-debug.log*
+whatsapp-bot/.npmrc
+
+# ═════════════════════════════════════════════════════════════════════
+# Puppeteer & Browser Cache (used by whatsapp-web.js)
+# ═════════════════════════════════════════════════════════════════════
+.cache/
+.puppeteer/
+.chromium-browser-snapshots/
 
 # ═════════════════════════════════════════════════════════════════════
 # IDE & Editor
@@ -44,6 +74,10 @@ frontend/yarn-debug.log*
 *~
 *.sublime-project
 *.sublime-workspace
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
 
 # ═════════════════════════════════════════════════════════════════════
 # OS Files
@@ -52,9 +86,11 @@ frontend/yarn-debug.log*
 .AppleDouble
 .LSOverride
 Thumbs.db
+.windows-build-tools/
+*.pdb
 
 # ═════════════════════════════════════════════════════════════════════
-# Build & Cache
+# Build & Dist
 # ═════════════════════════════════════════════════════════════════════
 dist/
 build/
@@ -64,30 +100,96 @@ build/
 .vercel/
 .next/
 out/
+.turbo/
 
 # ═════════════════════════════════════════════════════════════════════
-# Logs
-# ═════════════════════════════════════════════════════════════════════
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-
-# ═════════════════════════════════════════════════════════════════════
-# Temporary Files
+# Temporary & Lock Files
 # ═════════════════════════════════════════════════════════════════════
 *.bak
 *.tmp
 *.backup
 *.swp
+*.swo
+*~
+.temp/
+tmp/
+temp/
 
 # ═════════════════════════════════════════════════════════════════════
-# Database & Cache (non-git)
+# Logs (application logs only, but keep logs directory)
+# ═════════════════════════════════════════════════════════════════════
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+backend.log
+frontend.log
+bot.log
+
+# ═════════════════════════════════════════════════════════════════════
+# Database & Cache Files
 # ═════════════════════════════════════════════════════════════════════
 *.db
 *.sqlite
 *.sqlite3
 redis-dump.rdb
+.redis-cache/
+
+# ═════════════════════════════════════════════════════════════════════
+# System & Process Files
+# ═════════════════════════════════════════════════════════════════════
+.DS_Store
+*.pid
+*.seed
+*.pid.lock
+.env.lock
+nohup.out
+
+# ═════════════════════════════════════════════════════════════════════
+# Package Manager Artifacts
+# ═════════════════════════════════════════════════════════════════════
+npm-shrinkwrap.json
+.package-lock.json
+package-lock.json.bak
+yarn.lock.bak
+pnpm-lock.yaml.bak
+
+# ═════════════════════════════════════════════════════════════════════
+# Testing
+# ═════════════════════════════════════════════════════════════════════
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+.nyc_output/
+dist-test/
+
+# ═════════════════════════════════════════════════════════════════════
+# IDE Specific
+# ═════════════════════════════════════════════════════════════════════
+.vscode/settings.json
+.vscode/launch.json
+.idea/*.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/workspace.xml
+.idea/vcs.xml
+*.sublime-project
+*.sublime-workspace
+.eclipsefdn
+.eclipse
+
+# ═════════════════════════════════════════════════════════════════════
+# Environment-specific (Keep templates, ignore instances)
+# ═════════════════════════════════════════════════════════════════════
+.env.local
+.env.*.local
+!.env.example
+!.env.server
+!.env.local (if template)
 
 # Keep these directories (committed with .gitkeep):
 # - data/ (training data & reference files)
